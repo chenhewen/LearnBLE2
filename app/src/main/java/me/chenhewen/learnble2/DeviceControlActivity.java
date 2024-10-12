@@ -1,26 +1,63 @@
 package me.chenhewen.learnble2;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
+import android.database.DataSetObserver;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
+import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 public class DeviceControlActivity extends AppCompatActivity {
 
-    private BluetoothLeService bluetoothService;
-
+    // 常量
+    private static int REQUEST_CODE = 10;
+    private static final long SCAN_PERIOD = 10000; // Stops scanning after 10 seconds.
     private String deviceAddress = "";
+
+    // 服务
+    private BluetoothLeService bluetoothService;
+    private BluetoothManager bluetoothManager;
+    private BluetoothAdapter bluetoothAdapter;
+    private BluetoothLeScanner bluetoothLeScanner;
+
+    // 视图
+    private Button sendButton;
+    private Spinner spinner;
+
+
+    private boolean scanning;
+    private Handler handler = new Handler();
+    private List<DeviceItem> deviceItems = new ArrayList();
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
@@ -41,15 +78,20 @@ public class DeviceControlActivity extends AppCompatActivity {
             bluetoothService = null;
         }
     };
-    private Button sendMsgButton;
+    private MySpinnerAdapter spinnerAdapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.device_control_layout);
 
-        sendMsgButton = findViewById(R.id.send_msg_button);
-        sendMsgButton.setOnClickListener(new View.OnClickListener() {
+        sendButton = findViewById(R.id.send_button);
+        spinner = findViewById(R.id.spinner);
+
+        spinnerAdapter = new MySpinnerAdapter();
+        spinner.setAdapter(spinnerAdapter);
+
+        sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (bluetoothService == null) {
@@ -60,12 +102,98 @@ public class DeviceControlActivity extends AppCompatActivity {
             }
         });
 
-        deviceAddress = DataHub.deviceAddress;
+        bluetoothManager = (BluetoothManager) getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
+        bluetoothAdapter = bluetoothManager.getAdapter();
+        bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
+
+        if (checkPermission()) {
+            scanLeDevice();
+        }
+
+//        deviceAddress = DataHub.deviceAddress;
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
     }
 
+    private boolean checkPermission() {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+            System.out.println("chw no permission and shoot a request");
+            ActivityCompat.requestPermissions(this, new String[]{
+                    android.Manifest.permission.BLUETOOTH,
+                    android.Manifest.permission.BLUETOOTH_ADMIN,
+                    android.Manifest.permission.BLUETOOTH_SCAN,
+                    android.Manifest.permission.BLUETOOTH_CONNECT,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+            }, REQUEST_CODE);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    @SuppressLint("MissingPermission")
+    private void scanLeDevice() {
+        if (!scanning) {
+            // Stops scanning after a predefined scan period.
+            handler.postDelayed(new Runnable() {
+
+                @Override
+                public void run() {
+                    scanning = false;
+                    System.out.println("chw: postDelayed stopScan");
+                    bluetoothLeScanner.stopScan(leScanCallback);
+                }
+            }, SCAN_PERIOD);
+
+            scanning = true;
+            deviceItems.clear();
+            System.out.println("chw: startScan");
+            bluetoothLeScanner.startScan(leScanCallback);
+        } else {
+            scanning = false;
+            System.out.println("chw: stopScan");
+            bluetoothLeScanner.stopScan(leScanCallback);
+        }
+    }
+
+    // Device scan callback.
+    @SuppressLint("MissingPermission")
+    private ScanCallback leScanCallback =
+            new ScanCallback() {
+                @Override
+                public void onScanResult(int callbackType, ScanResult result) {
+                    super.onScanResult(callbackType, result);
+                    String deviceAddress = result.getDevice().getAddress();
+                    String name = result.getDevice().getName();
+                    System.out.println("chw: ScanCallback result: " + name + " "+ deviceAddress);
+
+//                    if ("CC2340TR2.4-GC".equals(name)) {
+//                        DataHub.deviceAddress = deviceAddress;
+//                    }
+
+                    DeviceItem deviceItem = new DeviceItem(name, deviceAddress);
+                    deviceItems.add(deviceItem);
+                    spinnerAdapter.notifyDataSetChanged();
+                }
+            };
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // 用户授予了权限，可以继续操作
+                System.out.println("chw: onRequestPermissionsResult grant");
+                scanLeDevice();
+            } else {
+                // 用户拒绝了权限，处理拒绝情况
+                System.out.println("chw: onRequestPermissionsResult reject");
+            }
+        }
+    }
 
     private final BroadcastReceiver gattUpdateReceiver = new BroadcastReceiver() {
         @Override
@@ -113,5 +241,61 @@ public class DeviceControlActivity extends AppCompatActivity {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         }
         context.startActivity(intent);
+    }
+
+    public static class DeviceItem {
+        public DeviceItem(String name, String address) {
+            this.name = name;
+            this.address = address;
+        }
+
+        String name;
+        String address;
+    }
+
+    public class MySpinnerAdapter extends BaseAdapter implements SpinnerAdapter {
+
+        @Override
+        public int getCount() {
+            return deviceItems.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return deviceItems.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                LayoutInflater inflater = LayoutInflater.from(DeviceControlActivity.this);
+                convertView = inflater.inflate(R.layout.device_item, parent, false);
+            }
+
+            bindView(position, convertView, parent, deviceItems.get(position));
+
+            return convertView;
+        }
+
+        private void bindView(int position, View convertView, ViewGroup parent, DeviceItem deviceItem) {
+            // 由于列表数量不会很多，我们直接简写
+            TextView nameView = convertView.findViewById(R.id.device_name);
+            TextView addressView = convertView.findViewById(R.id.device_address);
+            Button connectButton = convertView.findViewById(R.id.device_connect_button);
+
+            nameView.setText(deviceItem.name);
+            addressView.setText(deviceItem.address);
+            connectButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    bluetoothService.connect(deviceItem.address);
+                }
+            });
+        }
     }
 }
