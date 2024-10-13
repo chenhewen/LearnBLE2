@@ -35,10 +35,12 @@ public class DashBoardActivity extends AppCompatActivity {
 
         TabLayout tabLayout = findViewById(R.id.tab_layout);
         TabLayout.Tab scannerTab = tabLayout.getTabAt(0);
+        TabLayout.Tab device1Tab = tabLayout.getTabAt(1);
         View fragmentAnchorView = findViewById(R.id.fragment_anchor);
 
-        TabFragmentItem tabFragmentItem1 = new TabFragmentItem(scannerTab, new ScannerFragment(), false, true);
-        List<TabFragmentItem> initialTabFragments = new ArrayList<>(Arrays.asList(tabFragmentItem1));
+        TabFragmentItem tabFragmentItem1 = new TabFragmentItem(scannerTab, new ScannerFragment(), false, false);
+        TabFragmentItem tabFragmentItem2 = new TabFragmentItem(device1Tab, new DeviceFragment(), false, true);
+        List<TabFragmentItem> initialTabFragments = new ArrayList<>(Arrays.asList(tabFragmentItem1, tabFragmentItem2));
         TabFragmentManager tabFragmentManager = new TabFragmentManager(tabLayout, fragmentAnchorView, getApplicationContext(), getSupportFragmentManager());
         tabFragmentManager.init(initialTabFragments);
     }
