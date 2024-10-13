@@ -3,21 +3,25 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
+    android:gravity="center"
     android:orientation="horizontal"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
     tools:context="me.chenhewen.learn.TabLayoutFragmentActivity">
 
     <TextView
         tools:text="Fragment tab "
         android:id="@+id/tab_text_view"
+        android:textColor="@color/black"
+        android:paddingHorizontal="6dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
     <TextView
         android:id="@+id/tab_close_button"
-        android:text="X"
-        android:padding="6dp"
+        android:text="x"
+        android:textColor="#AAAAAA"
+        android:paddingHorizontal="6dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 

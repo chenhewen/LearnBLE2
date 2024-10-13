@@ -21,7 +21,10 @@ import androidx.fragment.app.FragmentTransaction;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.tabs.TabLayout;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import me.chenhewen.learnble2.R;
@@ -42,72 +45,22 @@ public class TabLayoutFragmentActivity extends AppCompatActivity {
         });
 
         TabLayout tabLayout = findViewById(R.id.tab_layout);
-        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                FragmentManager fragmentManager = getSupportFragmentManager();
-                FragmentTransaction transaction = fragmentManager.beginTransaction();
-
-                if (tab.getPosition() == 0) {
-                    transaction.replace(R.id.fragment_anchor, MyFragment1.class, null);
-                } else if (tab.getPosition() == 1) {
-                    transaction.replace(R.id.fragment_anchor, MyFragment2.class, null);
-                } else {
-                    transaction.replace(R.id.fragment_anchor, map.get(tab));
-                }
-
-                transaction.commit();
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-
-            }
-        });
-
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(R.id.fragment_anchor, MyFragment1.class, null);
-        transaction.commit();
-
+        TabLayout.Tab tab1 = tabLayout.getTabAt(0);
+        TabLayout.Tab tab2 = tabLayout.getTabAt(1);
+        View fragmentAnchorView = findViewById(R.id.fragment_anchor);
         Button addButton = findViewById(R.id.add_button);
+
+        TabFragmentItem tabFragmentItem1 = new TabFragmentItem(tab1, new MyFragment1(), false, true);
+        TabFragmentItem tabFragmentItem2 = new TabFragmentItem(tab2, new MyFragment2(), false, false);
+        List<TabFragmentItem> initialTabFragments = new ArrayList<>(Arrays.asList(tabFragmentItem1, tabFragmentItem2));
+        TabFragmentManager tabFragmentManager = new TabFragmentManager(tabLayout, fragmentAnchorView, getApplicationContext(), getSupportFragmentManager());
+        tabFragmentManager.init(initialTabFragments);
+
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                TabLayout.Tab tab = tabLayout.newTab();
                 int v1 = (int) (Math.random() * 1000);
-
-                LayoutInflater inflater = LayoutInflater.from(TabLayoutFragmentActivity.this);
-                View customTabView = inflater.inflate(R.layout.activity_tab_layout_custom_tab, null);
-                TextView tabTextView = customTabView.findViewById(R.id.tab_text_view);
-                View tabCloseButton = customTabView.findViewById(R.id.tab_close_button);
-                tabTextView.setText("" + v1);
-                tabCloseButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        int nextP = Math.max(tab.getPosition() - 1, 0);
-                        tabLayout.removeTab(tab);
-                        TabLayout.Tab tab = tabLayout.getTabAt(nextP);
-                        tabLayout.selectTab(tab);
-                    }
-                });
-
-                tab.setCustomView(customTabView);
-                tabLayout.addTab(tab);
-
-                FragmentManager fragmentManager = getSupportFragmentManager();
-                FragmentTransaction transaction = fragmentManager.beginTransaction();
-                MyFragmentCustom fragment = new MyFragmentCustom(v1);
-                transaction.replace(R.id.fragment_anchor, fragment, v1 + "");
-                transaction.commit();
-
-                map.put(tab, fragment);
-                tabLayout.selectTab(tab);
+                tabFragmentManager.addTab(v1 + "", new MyFragmentCustom(v1), true);
             }
         });
 

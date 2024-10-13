@@ -35,8 +35,16 @@ public class TabFragmentManager {
     private Map<TabLayout.Tab, TabFragmentItem> tabFragmentMap = new LinkedHashMap<>();
 
     public void init(List<TabFragmentItem> initialTabFragments) {
-        for (TabFragmentItem initialTabFragment : initialTabFragments) {
-            tabFragmentMap.put(initialTabFragment.tab, initialTabFragment);
+        if (initialTabFragments != null && !initialTabFragments.isEmpty()) {
+            TabLayout.Tab defaultSelectTab = initialTabFragments.get(0).tab;
+            for (TabFragmentItem initialTabFragment : initialTabFragments) {
+                tabFragmentMap.put(initialTabFragment.tab, initialTabFragment);
+                if (initialTabFragment.defaultSelected) {
+                    defaultSelectTab = initialTabFragment.tab;
+                }
+            }
+
+            tabLayout.selectTab(defaultSelectTab);
         }
 
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -82,20 +90,15 @@ public class TabFragmentManager {
 
     public void addTab(String title, Fragment fragment, Boolean isClosable) {
         TabLayout.Tab newTab = createNewTab(title);
-        TabFragmentItem item = new TabFragmentItem(newTab, fragment, isClosable);
+        TabFragmentItem item = new TabFragmentItem(newTab, fragment, isClosable, false);
         tabFragmentMap.put(newTab, item);
+        tabLayout.addTab(newTab);
+        tabLayout.selectTab(newTab);
     }
 
     public void removeTab(TabLayout.Tab tab) {
         tabFragmentMap.remove(tab);
-
-//        int tabPosition = tab.getPosition();
-//        if (tabPosition == tabFragmentMap.size() - 1) {
-//            // the last tab
-//            if (tabPosition != 0) {
-//                tabLayout.selectTab(tabLayout.getTabAt(tabPosition - 1));
-//            }
-//        }
+        tabLayout.removeTab(tab);
     }
 }
 

@@ -7,11 +7,13 @@ import com.google.android.material.tabs.TabLayout;
 public class TabFragmentItem {
     public TabLayout.Tab tab;
     public Fragment fragment;
-    public Boolean isClosable;
+    public boolean isClosable;
+    public boolean defaultSelected;
 
-    public TabFragmentItem(TabLayout.Tab tab, Fragment fragment, Boolean isClosable) {
+    public TabFragmentItem(TabLayout.Tab tab, Fragment fragment, boolean isClosable, boolean defaultSelected) {
         this.tab = tab;
         this.fragment = fragment;
         this.isClosable = isClosable;
+        this.defaultSelected = defaultSelected;
     }
 }
