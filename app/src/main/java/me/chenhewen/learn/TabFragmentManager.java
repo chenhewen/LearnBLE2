@@ -45,6 +45,7 @@ public class TabFragmentManager {
             }
 
             tabLayout.selectTab(defaultSelectTab);
+            updateFragment(defaultSelectTab);
         }
 
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
