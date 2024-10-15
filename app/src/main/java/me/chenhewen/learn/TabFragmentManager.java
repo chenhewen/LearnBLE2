@@ -45,13 +45,13 @@ public class TabFragmentManager {
             }
 
             tabLayout.selectTab(defaultSelectTab);
-            updateFragment(defaultSelectTab);
+            updateCachedFragment(defaultSelectTab);
         }
 
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                updateFragment(tab);
+                updateCachedFragment(tab);
             }
 
             @Override
@@ -65,6 +65,24 @@ public class TabFragmentManager {
     private void updateFragment(TabLayout.Tab tab) {
         FragmentTransaction transaction = fragmentManager.beginTransaction();
         transaction.replace(fragmentAnchor.getId(), tabFragmentMap.get(tab).fragment);
+        transaction.commit();
+    }
+
+    private void updateCachedFragment(TabLayout.Tab tab) {
+        List<Fragment> allFragments = fragmentManager.getFragments();
+        TabFragmentItem tabFragmentItem = tabFragmentMap.get(tab);
+
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        for (Fragment fragment : allFragments) {
+            transaction.hide(fragment);
+        }
+
+        if (tabFragmentItem != null) {
+            if (!allFragments.contains(tabFragmentItem.fragment)) {
+                transaction.add(fragmentAnchor.getId(), tabFragmentItem.fragment);
+            }
+            transaction.show(tabFragmentItem.fragment);
+        }
         transaction.commit();
     }
 

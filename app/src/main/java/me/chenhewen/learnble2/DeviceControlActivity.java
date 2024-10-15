@@ -37,6 +37,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import me.chenhewen.learnble2.model.DeviceItem;
+
 public class DeviceControlActivity extends AppCompatActivity {
 
     // 常量
@@ -174,7 +176,7 @@ public class DeviceControlActivity extends AppCompatActivity {
 //                        DataHub.deviceAddress = deviceAddress;
 //                    }
 
-                    DeviceItem deviceItem = new DeviceItem(name, deviceAddress);
+                    DeviceItem deviceItem = new DeviceItem(name, deviceAddress, 0);
                     deviceItems.add(deviceItem);
                     spinnerAdapter.notifyDataSetChanged();
                 }
@@ -241,16 +243,6 @@ public class DeviceControlActivity extends AppCompatActivity {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         }
         context.startActivity(intent);
-    }
-
-    public static class DeviceItem {
-        public DeviceItem(String name, String address) {
-            this.name = name;
-            this.address = address;
-        }
-
-        String name;
-        String address;
     }
 
     public class MySpinnerAdapter extends BaseAdapter implements SpinnerAdapter {

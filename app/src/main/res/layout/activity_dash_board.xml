@@ -8,6 +8,11 @@
     android:layout_height="match_parent"
     tools:context=".DashBoardActivity">
 
+    <include
+        android:id="@+id/inline_notification"
+        layout="@layout/bluetooth_inline_notification_layout"
+        android:visibility="gone"/>
+
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tab_layout"
         app:tabMode="scrollable"
