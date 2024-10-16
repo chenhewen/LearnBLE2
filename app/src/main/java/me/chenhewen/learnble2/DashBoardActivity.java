@@ -12,6 +12,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -21,6 +22,10 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.tabs.TabLayout;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -29,12 +34,16 @@ import me.chenhewen.learn.TabFragmentItem;
 import me.chenhewen.learn.TabFragmentManager;
 import me.chenhewen.learn.TabLayoutFragmentActivity;
 import me.chenhewen.learnble2.dealer.BluetoothDealer;
+import me.chenhewen.learnble2.event.BluetoothStateEvent;
+import me.chenhewen.learnble2.model.DeviceItem;
 
 public class DashBoardActivity extends AppCompatActivity {
 
     private static int REQUEST_CODE = 10;
 
     private BluetoothDealer bluetoothDealer;
+    public TabFragmentManager tabFragmentManager;
+
     View inlineNotification;
 
     @Override
@@ -48,21 +57,19 @@ public class DashBoardActivity extends AppCompatActivity {
             return insets;
         });
 
-        listenBluetoothStateChange();
-        checkPermission();
+        requestPermission();
+        EventBus.getDefault().register(this);
 
         bluetoothDealer = BLEApplication.getBluetoothDealer();
 
         TabLayout tabLayout = findViewById(R.id.tab_layout);
-        TabLayout.Tab scannerTab = tabLayout.getTabAt(0);
-        TabLayout.Tab device1Tab = tabLayout.getTabAt(1);
         View fragmentAnchorView = findViewById(R.id.fragment_anchor);
 
-        TabFragmentItem tabFragmentItem1 = new TabFragmentItem(scannerTab, new ScannerFragment(), false, true);
-        TabFragmentItem tabFragmentItem2 = new TabFragmentItem(device1Tab, new DeviceFragment(), false, false);
-        List<TabFragmentItem> initialTabFragments = new ArrayList<>(Arrays.asList(tabFragmentItem1, tabFragmentItem2));
-        TabFragmentManager tabFragmentManager = new TabFragmentManager(tabLayout, fragmentAnchorView, getApplicationContext(), getSupportFragmentManager());
-        tabFragmentManager.init(initialTabFragments);
+        tabFragmentManager = new TabFragmentManager(tabLayout, fragmentAnchorView, getApplicationContext(), getSupportFragmentManager());
+        tabFragmentManager.addTab("Scanner", new ScannerFragment(), false);
+        for (DeviceItem deviceItem : DeviceItem.mockItems) {
+            tabFragmentManager.addTab(deviceItem.name, DeviceFragment.newInstance(deviceItem), true);
+        }
 
         inlineNotification = findViewById(R.id.inline_notification);
         View enableBluetoothButton = findViewById(R.id.inline_notification_enable_button);
@@ -75,15 +82,7 @@ public class DashBoardActivity extends AppCompatActivity {
         });
     }
 
-    private void listenBluetoothStateChange() {
-        // 初始化广播接收器
-        BluetoothStateReceiver bluetoothStateReceiver = new BluetoothStateReceiver();
-        // 定义 IntentFilter 以接收蓝牙状态的广播
-        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
-        registerReceiver(bluetoothStateReceiver, filter); // 注册广播接收器
-    }
-
-    private boolean checkPermission() {
+    private boolean requestPermission() {
 //        System.out.println("chw no permission and shoot a request");
         ActivityCompat.requestPermissions(this, new String[]{
                 android.Manifest.permission.BLUETOOTH,
@@ -111,26 +110,23 @@ public class DashBoardActivity extends AppCompatActivity {
         }
     }
 
-    private class BluetoothStateReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action)) {
-                int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
-                switch (state) {
-                    case BluetoothAdapter.STATE_OFF:
-                        // 蓝牙关闭
-                        inlineNotification.setVisibility(View.VISIBLE);
-                        break;
-                    case BluetoothAdapter.STATE_ON:
-                        // 蓝牙开启
-                        inlineNotification.setVisibility(View.GONE);
-                        break;
-                    default:
-                        break;
-                }
-            }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(BluetoothStateEvent event) {
+        switch (event.bluetoothState) {
+            case BluetoothAdapter.STATE_ON:
+                inlineNotification.setVisibility(View.GONE);
+                break;
+            case BluetoothAdapter.STATE_OFF:
+                inlineNotification.setVisibility(View.VISIBLE);
+                break;
+            default:
+                break;
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
     }
 }

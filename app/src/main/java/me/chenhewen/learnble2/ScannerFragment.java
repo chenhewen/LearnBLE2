@@ -1,5 +1,10 @@
 package me.chenhewen.learnble2;
 
+import android.bluetooth.BluetoothAdapter;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -10,11 +15,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.os.Handler;
+import android.os.IBinder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -24,13 +31,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import me.chenhewen.learn.TabFragmentManager;
 import me.chenhewen.learnble2.dealer.BluetoothDealer;
-import me.chenhewen.learnble2.model.DeviceItem;
+import me.chenhewen.learnble2.event.BluetoothStateEvent;
+import me.chenhewen.learnble2.model.ScanItem;
 
 public class ScannerFragment extends Fragment {
-
     // 常量
     private static final String ARG_SAVE_STATE = "ARG_SAVE_STATE";
+
+    // 服务
+    private BluetoothLeService bluetoothService;
 
     // 内部状态变量
     private Handler handler = new Handler();
@@ -41,18 +52,18 @@ public class ScannerFragment extends Fragment {
 
     // 数据
     private BluetoothDealer bluetoothDealer;
-    private List<DeviceItem> mockItems = new ArrayList<>(Arrays.asList(
-            new DeviceItem("AAAAA", "1.A.B.C.D.E.F", -10),
-            new DeviceItem("BBBBB", "2.A.B.C.D.E.F", -20)
+    private List<ScanItem> mockItems = new ArrayList<>(Arrays.asList(
+            new ScanItem("AAAAA", "1.A.B.C.D.E.F", -10),
+            new ScanItem("BBBBB", "2.A.B.C.D.E.F", -20)
     ));
-    private List<DeviceItem> deviceItems = mockItems;
+    private List<ScanItem> scanItems = mockItems;
 
-//    private static final String ARG_deviceItems = "ARG_deviceItems";
+//    private static final String ARG_1 = "ARG_1";
 //
-//    public static ScannerFragment newInstance(List<DeviceItem> deviceItems) {
+//    public static ScannerFragment newInstance(TabFragmentManager tabFragmentManager) {
 //        ScannerFragment fragment = new ScannerFragment();
 //        Bundle args = new Bundle();
-//        args.putSerializable(ARG_deviceItems, new ArrayList<>(deviceItems));
+//        args.putSerializable(ARG_1, tabFragmentManager);
 //        fragment.setArguments(args);
 //
 //        return fragment;
@@ -64,10 +75,12 @@ public class ScannerFragment extends Fragment {
         EventBus.getDefault().register(this);
         bluetoothDealer = BLEApplication.getBluetoothDealer();
 
-        if (bluetoothDealer.deviceItems.isEmpty()) {
-            bluetoothDealer.scanLeDevice();
+        if (bluetoothDealer.scanItems.isEmpty()) {
+            if (bluetoothDealer.isBluetoothEnable()) {
+                bluetoothDealer.scanLeDevice();
+            }
         } else {
-            deviceItems = bluetoothDealer.deviceItems;
+            scanItems = bluetoothDealer.scanItems;
         }
     }
 
@@ -77,6 +90,7 @@ public class ScannerFragment extends Fragment {
         View contentView = inflater.inflate(R.layout.fragment_scanner, container, false);
         swipeRefreshLayout = contentView.findViewById(R.id.swipe_refresh_layout);
 
+        swipeRefreshLayout.setEnabled(bluetoothDealer.isBluetoothEnable());
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -110,20 +124,20 @@ public class ScannerFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
-            DeviceItem deviceItem = deviceItems.get(position);
-            holder.nameView.setText(deviceItem.name);
-            holder.addressView.setText(deviceItem.address);
+            ScanItem scanItem = scanItems.get(position);
+            holder.nameView.setText(scanItem.name);
+            holder.addressView.setText(scanItem.address);
             holder.connectButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // TODO:
+                    startBluetoothLeService(scanItem);
                 }
             });
         }
 
         @Override
         public int getItemCount() {
-            return deviceItems.size();
+            return scanItems.size();
         }
     }
 
@@ -140,14 +154,55 @@ public class ScannerFragment extends Fragment {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onMessageEvent(DeviceItem.MessageEvent event) {
-        this.deviceItems = event.deviceItems;
+    public void onMessageEvent(ScanItem.MessageEvent event) {
+        this.scanItems = event.scanItems;
         recyclerViewAdapter.notifyDataSetChanged();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(BluetoothStateEvent event) {
+        swipeRefreshLayout.setEnabled(event.bluetoothState == BluetoothAdapter.STATE_ON);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
+    }
+
+    public void startBluetoothLeService(ScanItem scanItem) {
+        Intent gattServiceIntent = new Intent(getContext(), BluetoothLeService.class);
+        MyBLEServiceConnection serviceConnection = new MyBLEServiceConnection(scanItem);
+        getContext().bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    private class MyBLEServiceConnection implements ServiceConnection {
+
+        public MyBLEServiceConnection(ScanItem scanItem) {
+            this.scanItem = scanItem;
+        }
+
+        private ScanItem scanItem;
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            bluetoothService = ((BluetoothLeService.LocalBinder) service).getService();
+            if (bluetoothService != null) {
+                if (!bluetoothService.initialize()) {
+                    Toast.makeText(getContext(), "Fail to connect", Toast.LENGTH_SHORT).show();
+                }
+                // 连接设备
+                boolean success = bluetoothService.connect(scanItem.address);
+                if (success) {
+                    // 增加Tab
+//                    TabFragmentManager.getInstance().addTab(scanItem.name, new DeviceFragment(), true);
+                }
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            bluetoothService = null;
+        }
     }
 }

@@ -15,13 +15,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import me.chenhewen.learnble2.model.DeviceItem;
+import me.chenhewen.learnble2.model.ScanItem;
 
 public class BluetoothDealer {
     
     public BluetoothDealer(Context context, BluetoothManager bluetoothManager) {
         this.context = context;
         bluetoothAdapter = bluetoothManager.getAdapter();
-        bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
     }
 
     // 常量
@@ -30,14 +30,14 @@ public class BluetoothDealer {
     // 蓝牙服务
     private Context context;
     private BluetoothAdapter bluetoothAdapter;
-    private BluetoothLeScanner bluetoothLeScanner;
 
     // 内部状态变量
     private boolean scanning;
     private Handler handler = new Handler();
 
     // 数据
-    public List<DeviceItem> deviceItems = new ArrayList();
+    public List<ScanItem> scanItems = new ArrayList();
+    public List<DeviceItem> deviceItems = new ArrayList<>();
 
     public boolean isBluetoothEnable() {
         return bluetoothAdapter.isEnabled();
@@ -50,6 +50,7 @@ public class BluetoothDealer {
 
     @SuppressLint("MissingPermission")
     public void scanLeDevice() {
+        BluetoothLeScanner bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
         if (!scanning) {
             // Stops scanning after a predefined scan period.
             handler.postDelayed(new Runnable() {
@@ -62,7 +63,7 @@ public class BluetoothDealer {
             }, SCAN_PERIOD);
 
             scanning = true;
-            deviceItems.clear();
+            scanItems.clear();
             System.out.println("chw: startScan");
             bluetoothLeScanner.startScan(deviceScanCallback);
         }
@@ -82,13 +83,27 @@ public class BluetoothDealer {
 
 //                    System.out.println("chw: ScanCallback result: " + name + " "+ deviceAddress);
 
-                    DeviceItem deviceItem = new DeviceItem(name, deviceAddress, rssi);
-                    if (deviceItems.stream().noneMatch(item -> item.address.equals(deviceAddress))) {
-                        deviceItems.add(deviceItem);
+                    ScanItem scanItem = new ScanItem(name, deviceAddress, rssi);
+                    if (scanItems.stream().noneMatch(item -> item.address.equals(deviceAddress))) {
+                        scanItems.add(scanItem);
                     }
 
-                    DeviceItem.sortByRssi(deviceItems);
-                    EventBus.getDefault().post(new DeviceItem.MessageEvent(deviceItems));
+                    ScanItem.sortByRssi(scanItems);
+                    EventBus.getDefault().post(new ScanItem.MessageEvent(scanItems));
                 }
             };
+
+
+    // Device item operations
+
+    public void addDeviceItem(DeviceItem deviceItem) {
+        boolean noneExists = deviceItems.stream().noneMatch((item) -> item.address.equals(deviceItem.address));
+        if (noneExists) {
+            deviceItems.add(deviceItem);
+        }
+    }
+
+    public void removeDeviceItem(DeviceItem deviceItem) {
+        deviceItems.removeIf( (item)-> item.address.equals(deviceItem.address));
+    }
 }

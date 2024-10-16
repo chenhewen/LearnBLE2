@@ -53,14 +53,14 @@ public class TabLayoutFragmentActivity extends AppCompatActivity {
         TabFragmentItem tabFragmentItem1 = new TabFragmentItem(tab1, new MyFragment1(), false, true);
         TabFragmentItem tabFragmentItem2 = new TabFragmentItem(tab2, new MyFragment2(), false, false);
         List<TabFragmentItem> initialTabFragments = new ArrayList<>(Arrays.asList(tabFragmentItem1, tabFragmentItem2));
-        TabFragmentManager tabFragmentManager = new TabFragmentManager(tabLayout, fragmentAnchorView, getApplicationContext(), getSupportFragmentManager());
-        tabFragmentManager.init(initialTabFragments);
+//        TabFragmentManager tabFragmentManager = new TabFragmentManager(tabLayout, fragmentAnchorView, getApplicationContext(), getSupportFragmentManager());
+//        tabFragmentManager.init(initialTabFragments);
 
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int v1 = (int) (Math.random() * 1000);
-                tabFragmentManager.addTab(v1 + "", new MyFragmentCustom(v1), true);
+//                tabFragmentManager.addTab(v1 + "", new MyFragmentCustom(v1), true);
             }
         });
 

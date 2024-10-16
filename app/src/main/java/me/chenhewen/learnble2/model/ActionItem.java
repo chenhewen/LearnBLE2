@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class InfoItem {
+public class ActionItem {
 
-    public InfoItem(String uuid, String title, SendDataType sendDataType, String sendString, int[] sendHex) {
+    public ActionItem(String uuid, String title, SendDataType sendDataType, String sendString, int[] sendHex) {
         this.uuid = uuid;
         this.title = title;
         this.sendDataType = sendDataType;
@@ -80,8 +80,8 @@ public class InfoItem {
         }
     }
 
-    public static List<InfoItem> mockItems = new ArrayList<>(Arrays.asList(
-            new InfoItem("AA-BB-CC-DD", "Hello", InfoItem.SendDataType.STRING, "hello", null),
-            new InfoItem("BB-CC-DD-EE", "World", InfoItem.SendDataType.HEX, null, new int[] {0x57, 0x6f, 0x72, 0x6c, 0x64})
+    public static List<ActionItem> mockItems = new ArrayList<>(Arrays.asList(
+            new ActionItem("AA-BB-CC-DD", "Hello", ActionItem.SendDataType.STRING, "hello", null),
+            new ActionItem("BB-CC-DD-EE", "World", ActionItem.SendDataType.HEX, null, new int[] {0x57, 0x6f, 0x72, 0x6c, 0x64})
     ));
 }

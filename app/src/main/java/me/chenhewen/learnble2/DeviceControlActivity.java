@@ -14,11 +14,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,9 +33,8 @@ import androidx.core.app.ActivityCompat;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
-import me.chenhewen.learnble2.model.DeviceItem;
+import me.chenhewen.learnble2.model.ScanItem;
 
 public class DeviceControlActivity extends AppCompatActivity {
 
@@ -59,7 +56,7 @@ public class DeviceControlActivity extends AppCompatActivity {
 
     private boolean scanning;
     private Handler handler = new Handler();
-    private List<DeviceItem> deviceItems = new ArrayList();
+    private List<ScanItem> scanItems = new ArrayList();
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
@@ -151,7 +148,7 @@ public class DeviceControlActivity extends AppCompatActivity {
             }, SCAN_PERIOD);
 
             scanning = true;
-            deviceItems.clear();
+            scanItems.clear();
             System.out.println("chw: startScan");
             bluetoothLeScanner.startScan(leScanCallback);
         } else {
@@ -176,8 +173,8 @@ public class DeviceControlActivity extends AppCompatActivity {
 //                        DataHub.deviceAddress = deviceAddress;
 //                    }
 
-                    DeviceItem deviceItem = new DeviceItem(name, deviceAddress, 0);
-                    deviceItems.add(deviceItem);
+                    ScanItem scanItem = new ScanItem(name, deviceAddress, 0);
+                    scanItems.add(scanItem);
                     spinnerAdapter.notifyDataSetChanged();
                 }
             };
@@ -249,12 +246,12 @@ public class DeviceControlActivity extends AppCompatActivity {
 
         @Override
         public int getCount() {
-            return deviceItems.size();
+            return scanItems.size();
         }
 
         @Override
         public Object getItem(int position) {
-            return deviceItems.get(position);
+            return scanItems.get(position);
         }
 
         @Override
@@ -269,23 +266,23 @@ public class DeviceControlActivity extends AppCompatActivity {
                 convertView = inflater.inflate(R.layout.device_item, parent, false);
             }
 
-            bindView(position, convertView, parent, deviceItems.get(position));
+            bindView(position, convertView, parent, scanItems.get(position));
 
             return convertView;
         }
 
-        private void bindView(int position, View convertView, ViewGroup parent, DeviceItem deviceItem) {
+        private void bindView(int position, View convertView, ViewGroup parent, ScanItem scanItem) {
             // 由于列表数量不会很多，我们直接简写
             TextView nameView = convertView.findViewById(R.id.device_name);
             TextView addressView = convertView.findViewById(R.id.device_address);
             Button connectButton = convertView.findViewById(R.id.device_connect_button);
 
-            nameView.setText(deviceItem.name);
-            addressView.setText(deviceItem.address);
+            nameView.setText(scanItem.name);
+            addressView.setText(scanItem.address);
             connectButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    bluetoothService.connect(deviceItem.address);
+                    bluetoothService.connect(scanItem.address);
                 }
             });
         }

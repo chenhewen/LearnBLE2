@@ -3,6 +3,7 @@ package me.chenhewen.learnble2;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -20,17 +21,33 @@ import android.widget.TextView;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.textfield.TextInputEditText;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import me.chenhewen.learnble2.model.InfoItem;
+import me.chenhewen.learnble2.model.ActionItem;
+import me.chenhewen.learnble2.model.DeviceItem;
 
 public class DeviceFragment extends Fragment {
 
-    private List<InfoItem> infoItems = InfoItem.mockItems;
+    public static final String ARG_DEVICE_ITEM = "ARG_DEVICE_ITEM";
+
+    private DeviceItem deviceItem;
 
     private String[] uuidMockItems = new String[] {"A-A-A-A", "B-B-B-B", "C-C-C-C", "D-D-D-D"};
+
+    public static DeviceFragment newInstance(DeviceItem deviceItem) {
+        Bundle args = new Bundle();
+        args.putSerializable(ARG_DEVICE_ITEM, deviceItem);
+        DeviceFragment fragment = new DeviceFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Bundle args = getArguments();
+        deviceItem = (DeviceItem) args.getSerializable(ARG_DEVICE_ITEM);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -63,17 +80,17 @@ public class DeviceFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull DeviceFragment.MyViewHolder holder, int position) {
-            paddingLastItem(holder, position, infoItems.size());
-            InfoItem infoItem = infoItems.get(position);
-            holder.titlView.setText(infoItem.title);
-            if (infoItem.sendDataType == InfoItem.SendDataType.STRING) {
+            paddingLastItem(holder, position, deviceItem.actionItems.size());
+            ActionItem actionItem = deviceItem.actionItems.get(position);
+            holder.titlView.setText(actionItem.title);
+            if (actionItem.sendDataType == ActionItem.SendDataType.STRING) {
                 holder.dataStringView.setVisibility(View.VISIBLE);
-                holder.dataStringView.setText(infoItem.sendString);
-                holder.dataHexView.setText(infoItem.getDisplayHexString());
-            } else if (infoItem.sendDataType == InfoItem.SendDataType.HEX) {
+                holder.dataStringView.setText(actionItem.sendString);
+                holder.dataHexView.setText(actionItem.getDisplayHexString());
+            } else if (actionItem.sendDataType == ActionItem.SendDataType.HEX) {
                 holder.dataStringView.setVisibility(View.GONE);
             }
-            holder.dataHexView.setText(infoItem.getDisplayHexString());
+            holder.dataHexView.setText(actionItem.getDisplayHexString());
 
             holder.moreButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -90,7 +107,7 @@ public class DeviceFragment extends Fragment {
                                 // TODO:
                             } else if (item.getItemId() == R.id.action_edit) {
                                 // TODO:
-                                openSheet(infoItem);
+                                openSheet(actionItem);
                             } else if (item.getItemId() == R.id.action_delete) {
                                 // TODO:
                             }
@@ -107,7 +124,7 @@ public class DeviceFragment extends Fragment {
 
         @Override
         public int getItemCount() {
-            return infoItems.size();
+            return deviceItem.actionItems.size();
         }
 
         private void paddingLastItem(MyViewHolder holder, int position, int listSize) {
@@ -138,15 +155,15 @@ public class DeviceFragment extends Fragment {
         }
     }
 
-    private void openSheet(InfoItem infoItem) {
+    private void openSheet(ActionItem actionItem) {
         BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(getContext());
         View sheetContentView = LayoutInflater.from(getContext()).inflate(R.layout.device_add_sheet, null);
         bottomSheetDialog.setContentView(sheetContentView);
         bottomSheetDialog.show();
 
-        InfoItem mockInfoItem = infoItems.get(1);
-        if (infoItem == null) {
-            infoItem = mockInfoItem;
+        ActionItem mockActionItem = deviceItem.actionItems.get(1);
+        if (actionItem == null) {
+            actionItem = mockActionItem;
         }
 
         // UUID
@@ -155,26 +172,26 @@ public class DeviceFragment extends Fragment {
                 android.R.layout.simple_dropdown_item_1line, uuidItems);
         AutoCompleteTextView uuidSelectionView = sheetContentView.findViewById(R.id.uuid_selection_view);
         uuidSelectionView.setAdapter(adapter);
-        uuidSelectionView.setText(infoItem.uuid, false);
+        uuidSelectionView.setText(actionItem.uuid, false);
 
         // Title
         TextInputEditText titleView = sheetContentView.findViewById(R.id.title_view);
-        titleView.setText(infoItem.title);
+        titleView.setText(actionItem.title);
 
         // Data type
-        String[] dataTypeItems = InfoItem.SendDataType.getAllValues();
+        String[] dataTypeItems = ActionItem.SendDataType.getAllValues();
         ArrayAdapter<String> dataTypeAdapter = new ArrayAdapter<String>(getContext(),
                 android.R.layout.simple_dropdown_item_1line, dataTypeItems);
         AutoCompleteTextView dataTypeSelectionView = sheetContentView.findViewById(R.id.data_type_selection);
         dataTypeSelectionView.setAdapter(dataTypeAdapter);
-        dataTypeSelectionView.setText(infoItem.sendDataType.getRawValue(), false);
+        dataTypeSelectionView.setText(actionItem.sendDataType.getRawValue(), false);
 
         // Send message
         TextInputEditText msgView = sheetContentView.findViewById(R.id.msg_view);
-        if (infoItem.sendDataType == InfoItem.SendDataType.STRING) {
-            msgView.setText(infoItem.sendString);
-        } else if (infoItem.sendDataType == InfoItem.SendDataType.HEX) {
-            msgView.setText(InfoItem.convertIntArrayToHexString(infoItem.sendHex));
+        if (actionItem.sendDataType == ActionItem.SendDataType.STRING) {
+            msgView.setText(actionItem.sendString);
+        } else if (actionItem.sendDataType == ActionItem.SendDataType.HEX) {
+            msgView.setText(ActionItem.convertIntArrayToHexString(actionItem.sendHex));
         }
 
         // Actions
