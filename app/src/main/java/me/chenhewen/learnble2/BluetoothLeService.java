@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.Intent;
@@ -16,8 +17,20 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.google.gson.Gson;
+
+import org.greenrobot.eventbus.EventBus;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import me.chenhewen.learnble2.data.GattCharacteristicItem;
+import me.chenhewen.learnble2.data.GattDescriptorItem;
+import me.chenhewen.learnble2.data.GattServiceItem;
+import me.chenhewen.learnble2.event.GattStateEvent;
+import me.chenhewen.learnble2.event.ServiceDiscoveredEvent;
 
 public class BluetoothLeService extends Service {
 
@@ -28,8 +41,6 @@ public class BluetoothLeService extends Service {
 
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTED = 2;
-
-    private int connectionState;
 
     private Binder binder = new LocalBinder();
 
@@ -76,6 +87,60 @@ public class BluetoothLeService extends Service {
             return false;
         }
         // connect to the GATT server on the device
+    }
+
+    @SuppressLint("MissingPermission")
+    public void discoverServices() {
+        bluetoothGatt.discoverServices();
+    }
+
+    public List<String> fetchAllServiceUuids() {
+        List<BluetoothGattService> services = bluetoothGatt.getServices();
+        return services.stream()
+                .map(service -> service.getUuid().toString())
+                .collect(Collectors.toList());
+    }
+
+    public List<String> fetchAllCharacteristicUuids(String serviceUuid) {
+        BluetoothGattService service = bluetoothGatt.getService(UUID.fromString(serviceUuid));
+        List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
+        return characteristics.stream()
+                .map(characteristic -> characteristic.getUuid().toString())
+                .collect(Collectors.toList());
+    }
+
+    public List<GattServiceItem> fetchAllServiceItems() {
+        List<BluetoothGattService> services = bluetoothGatt.getServices();
+        System.out.println("chw: services.size " + services.size());
+        List<GattServiceItem> serviceItems = new ArrayList<>();
+        for (BluetoothGattService service : services) {
+            List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
+
+            List<GattCharacteristicItem> characteristicItems = new ArrayList<>();
+            for (BluetoothGattCharacteristic characteristic : characteristics) {
+                List<BluetoothGattDescriptor> descriptors = characteristic.getDescriptors();
+
+                List<GattDescriptorItem> descriptorItems = new ArrayList<>();
+                for (BluetoothGattDescriptor descriptor : descriptors) {
+                    UUID descriptorUuid = descriptor.getUuid();
+                    byte[] descriptorValueBytes = descriptor.getValue();
+                    String descriptorValueString = descriptorValueBytes == null ? "" : new String(descriptorValueBytes);
+                    GattDescriptorItem gattDescriptorItem = new GattDescriptorItem(descriptorUuid, descriptorValueString, descriptorValueBytes);
+                    descriptorItems.add(gattDescriptorItem);
+                }
+
+                UUID characteristicUuid = characteristic.getUuid();
+                int characteristicProperties = characteristic.getProperties();
+                GattCharacteristicItem gattCharacteristicItem = new GattCharacteristicItem(characteristicUuid, characteristicProperties, descriptorItems);
+                characteristicItems.add(gattCharacteristicItem);
+            }
+
+            UUID serviceUuid = service.getUuid();
+            GattServiceItem serviceItem = new GattServiceItem(serviceUuid, characteristicItems);
+            serviceItems.add(serviceItem);
+        }
+
+        return serviceItems;
     }
 
     @SuppressLint("MissingPermission")
@@ -126,25 +191,26 @@ public class BluetoothLeService extends Service {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 // successfully connected to the GATT Server
                 System.out.println("chw: gattUpdateReceiver connected");
-                connectionState = STATE_CONNECTED;
-                broadcastUpdate(ACTION_GATT_CONNECTED);
-
                 // Attempts to discover services after successful connection.
                 bluetoothGatt.discoverServices();
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 // disconnected from the GATT Server
                 System.out.println("chw: gattUpdateReceiver disconnected");
-                connectionState = STATE_DISCONNECTED;
-                broadcastUpdate(ACTION_GATT_DISCONNECTED);
             }
+
+            EventBus.getDefault().post(new GattStateEvent(status, newState));
+        }
+
+        @Override
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            super.onServicesDiscovered(gatt, status);
+            List<GattServiceItem> serviceItems = fetchAllServiceItems();
+            BLEApplication.getBluetoothDealer().gattServiceItems = serviceItems;
+
+            EventBus.getDefault().post(new ServiceDiscoveredEvent(serviceItems));
         }
     };
-
-    private void broadcastUpdate(final String action) {
-        final Intent intent = new Intent(action);
-        sendBroadcast(intent);
-    }
 
     @Override
     public boolean onUnbind(Intent intent) {

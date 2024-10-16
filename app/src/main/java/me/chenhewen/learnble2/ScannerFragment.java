@@ -32,8 +32,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import me.chenhewen.learn.TabFragmentManager;
+import me.chenhewen.learnble2.data.GattServiceItem;
 import me.chenhewen.learnble2.dealer.BluetoothDealer;
 import me.chenhewen.learnble2.event.BluetoothStateEvent;
+import me.chenhewen.learnble2.model.DeviceItem;
 import me.chenhewen.learnble2.model.ScanItem;
 
 public class ScannerFragment extends Fragment {
@@ -195,7 +197,7 @@ public class ScannerFragment extends Fragment {
                 boolean success = bluetoothService.connect(scanItem.address);
                 if (success) {
                     // 增加Tab
-//                    TabFragmentManager.getInstance().addTab(scanItem.name, new DeviceFragment(), true);
+                    ((DashBoardActivity)getActivity()).tabFragmentManager.addTab(scanItem.name, DeviceFragment.newInstance(new DeviceItem(scanItem)), true);
                 }
             }
         }

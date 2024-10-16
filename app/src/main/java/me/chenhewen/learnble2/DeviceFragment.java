@@ -46,7 +46,21 @@ public class DeviceFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Bundle args = getArguments();
-        deviceItem = (DeviceItem) args.getSerializable(ARG_DEVICE_ITEM);
+        System.out.println("chw: DeviceFragment onCreate");
+        if (args != null) {
+            System.out.println("chw: DeviceFragment onCreate args != null");
+            deviceItem = (DeviceItem) args.getSerializable(ARG_DEVICE_ITEM);
+        } else if (savedInstanceState != null) {
+            System.out.println("chw: DeviceFragment onCreate savedInstanceState != null");
+            deviceItem = (DeviceItem) savedInstanceState.getSerializable(ARG_DEVICE_ITEM);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        System.out.println("chw: onSaveInstanceState");
+        outState.putSerializable(ARG_DEVICE_ITEM, deviceItem);
     }
 
     @Override

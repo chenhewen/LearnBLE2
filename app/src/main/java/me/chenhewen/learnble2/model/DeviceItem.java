@@ -16,6 +16,11 @@ public class DeviceItem implements Serializable {
         this.actionItems = actionItems;
     }
 
+    public DeviceItem(ScanItem scanItem) {
+        this.name = scanItem.name;
+        this.address = scanItem.address;
+    }
+
     public static List<DeviceItem> mockItems = new ArrayList<>(Arrays.asList(
             new DeviceItem("MockDevice-1", "mac.1.1.1.1", ActionItem.mockItems)
 //            new DeviceItem("MockDevice-2", "mac.2.2.2.2", ActionItem.mockItems)
