@@ -11,14 +11,16 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.tabs.TabLayout;
 
+import org.greenrobot.eventbus.EventBus;
+
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import me.chenhewen.learnble2.R;
+import me.chenhewen.learnble2.event.TabRemovedEvent;
 
 public class TabFragmentManager implements Serializable {
 
@@ -106,14 +108,14 @@ public class TabFragmentManager implements Serializable {
         return newTab;
     }
 
-    public void addTab(String title, Fragment fragment, boolean isClosable) {
+    public void addTab(String title, Fragment fragment, String fragmentTag, boolean isClosable) {
         TabLayout.Tab newTab = createNewTab(title, isClosable);
         TabFragmentItem item = new TabFragmentItem(newTab, fragment, isClosable, false);
         tabFragmentMap.put(newTab, item);
         tabLayout.addTab(newTab);
 
         FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.add(fragmentAnchor.getId(), fragment);
+        transaction.add(fragmentAnchor.getId(), fragment, fragmentTag);
         transaction.commit();
 
         tabLayout.selectTab(newTab);
@@ -122,6 +124,8 @@ public class TabFragmentManager implements Serializable {
     public void removeTab(TabLayout.Tab tab) {
         TabFragmentItem removedTabFragmentItem = tabFragmentMap.remove(tab);
         tabLayout.removeTab(tab);
+
+        EventBus.getDefault().post(new TabRemovedEvent(removedTabFragmentItem.fragment.getTag()));
 
         FragmentTransaction transaction = fragmentManager.beginTransaction();
         transaction.remove(removedTabFragmentItem.fragment);

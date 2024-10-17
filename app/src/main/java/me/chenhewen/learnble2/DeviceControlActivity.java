@@ -97,7 +97,7 @@ public class DeviceControlActivity extends AppCompatActivity {
                     return;
                 }
 
-                bluetoothService.send("whatever");
+//                bluetoothService.send("whatever");
             }
         });
 

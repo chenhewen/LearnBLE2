@@ -12,7 +12,9 @@ import android.os.Handler;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import me.chenhewen.learnble2.data.GattServiceItem;
 import me.chenhewen.learnble2.model.DeviceItem;
@@ -37,7 +39,8 @@ public class BluetoothDealer {
     private Handler handler = new Handler();
 
     // 数据
-    public List<GattServiceItem> gattServiceItems = new ArrayList<>();
+    public Map<String, List<GattServiceItem>> gettServiceItemsMap = new HashMap<>();
+//    public List<GattServiceItem> gattServiceItems = new ArrayList<>();
     public List<ScanItem> scanItems = new ArrayList();
     public List<DeviceItem> deviceItems = new ArrayList<>();
 

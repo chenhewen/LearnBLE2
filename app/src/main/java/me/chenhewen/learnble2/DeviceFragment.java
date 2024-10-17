@@ -1,5 +1,9 @@
 package me.chenhewen.learnble2;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -9,6 +13,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.IBinder;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,14 +26,20 @@ import android.widget.TextView;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.textfield.TextInputEditText;
 
-import java.util.List;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
+import me.chenhewen.learnble2.event.TabRemovedEvent;
 import me.chenhewen.learnble2.model.ActionItem;
 import me.chenhewen.learnble2.model.DeviceItem;
 
 public class DeviceFragment extends Fragment {
 
     public static final String ARG_DEVICE_ITEM = "ARG_DEVICE_ITEM";
+
+    // 服务
+    private BluetoothLeService bluetoothService;
 
     private DeviceItem deviceItem;
 
@@ -45,8 +56,8 @@ public class DeviceFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
         Bundle args = getArguments();
-        System.out.println("chw: DeviceFragment onCreate");
         if (args != null) {
             System.out.println("chw: DeviceFragment onCreate args != null");
             deviceItem = (DeviceItem) args.getSerializable(ARG_DEVICE_ITEM);
@@ -54,6 +65,8 @@ public class DeviceFragment extends Fragment {
             System.out.println("chw: DeviceFragment onCreate savedInstanceState != null");
             deviceItem = (DeviceItem) savedInstanceState.getSerializable(ARG_DEVICE_ITEM);
         }
+
+        startBluetoothLeService();
     }
 
     @Override
@@ -118,9 +131,10 @@ public class DeviceFragment extends Fragment {
                         @Override
                         public boolean onMenuItemClick(MenuItem item) {
                             if (item.getItemId() == R.id.action_send) {
-                                // TODO:
+                                if (bluetoothService != null) {
+                                    bluetoothService.send(deviceItem.address, actionItem.serviceUuid, actionItem.characteristicUuid, actionItem.getToSendingData());
+                                }
                             } else if (item.getItemId() == R.id.action_edit) {
-                                // TODO:
                                 openSheet(actionItem);
                             } else if (item.getItemId() == R.id.action_delete) {
                                 // TODO:
@@ -180,13 +194,20 @@ public class DeviceFragment extends Fragment {
             actionItem = mockActionItem;
         }
 
-        // UUID
+        // service UUID
         String[] uuidItems = uuidMockItems;
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(),
+        ArrayAdapter<String> serviceUuidAdapter = new ArrayAdapter<String>(getContext(),
                 android.R.layout.simple_dropdown_item_1line, uuidItems);
-        AutoCompleteTextView uuidSelectionView = sheetContentView.findViewById(R.id.uuid_selection_view);
-        uuidSelectionView.setAdapter(adapter);
-        uuidSelectionView.setText(actionItem.uuid, false);
+        AutoCompleteTextView serviceUuidSelectionView = sheetContentView.findViewById(R.id.service_uuid_selection_view);
+        serviceUuidSelectionView.setAdapter(serviceUuidAdapter);
+        serviceUuidSelectionView.setText(actionItem.serviceUuid, false);
+
+        // characteristic UUID
+        ArrayAdapter<String> characteristicUuidAdapter = new ArrayAdapter<String>(getContext(),
+                android.R.layout.simple_dropdown_item_1line, uuidItems);
+        AutoCompleteTextView characteristicUuidSelectionView = sheetContentView.findViewById(R.id.characteristic_uuid_selection_view);
+        characteristicUuidSelectionView.setAdapter(characteristicUuidAdapter);
+        characteristicUuidSelectionView.setText(actionItem.characteristicUuid, false);
 
         // Title
         TextInputEditText titleView = sheetContentView.findViewById(R.id.title_view);
@@ -205,7 +226,7 @@ public class DeviceFragment extends Fragment {
         if (actionItem.sendDataType == ActionItem.SendDataType.STRING) {
             msgView.setText(actionItem.sendString);
         } else if (actionItem.sendDataType == ActionItem.SendDataType.HEX) {
-            msgView.setText(ActionItem.convertIntArrayToHexString(actionItem.sendHex));
+            msgView.setText(ActionItem.convertByteArrayToHexString(actionItem.sendHex));
         }
 
         // Actions
@@ -218,5 +239,38 @@ public class DeviceFragment extends Fragment {
                 bottomSheetDialog.dismiss();
             }
         });
+    }
+
+    public void startBluetoothLeService() {
+        Intent gattServiceIntent = new Intent(getContext(), BluetoothLeService.class);
+        MyBLEServiceConnection serviceConnection = new MyBLEServiceConnection();
+        getContext().bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    private class MyBLEServiceConnection implements ServiceConnection {
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            bluetoothService = ((BluetoothLeService.LocalBinder) service).getService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            bluetoothService = null;
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(TabRemovedEvent event) {
+        if (bluetoothService != null) {
+            // 目前，可关闭的tab，我们使用device address作为tag
+            bluetoothService.disconnect(event.tag);
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
     }
 }

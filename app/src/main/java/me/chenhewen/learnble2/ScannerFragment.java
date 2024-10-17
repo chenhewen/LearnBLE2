@@ -197,7 +197,7 @@ public class ScannerFragment extends Fragment {
                 boolean success = bluetoothService.connect(scanItem.address);
                 if (success) {
                     // 增加Tab
-                    ((DashBoardActivity)getActivity()).tabFragmentManager.addTab(scanItem.name, DeviceFragment.newInstance(new DeviceItem(scanItem)), true);
+                    ((DashBoardActivity)getActivity()).tabFragmentManager.addTab(scanItem.name, DeviceFragment.newInstance(new DeviceItem(scanItem)), scanItem.address, true);
                 }
             }
         }

@@ -66,9 +66,9 @@ public class DashBoardActivity extends AppCompatActivity {
         View fragmentAnchorView = findViewById(R.id.fragment_anchor);
 
         tabFragmentManager = new TabFragmentManager(tabLayout, fragmentAnchorView, getApplicationContext(), getSupportFragmentManager());
-        tabFragmentManager.addTab("Scanner", new ScannerFragment(), false);
+        tabFragmentManager.addTab("Scanner", new ScannerFragment(), "scanner", false);
         for (DeviceItem deviceItem : DeviceItem.mockItems) {
-            tabFragmentManager.addTab(deviceItem.name, DeviceFragment.newInstance(deviceItem), true);
+            tabFragmentManager.addTab(deviceItem.name, DeviceFragment.newInstance(deviceItem), deviceItem.address, true);
         }
 
         inlineNotification = findViewById(R.id.inline_notification);

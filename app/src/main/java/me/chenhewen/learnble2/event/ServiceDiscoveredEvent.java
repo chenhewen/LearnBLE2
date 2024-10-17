@@ -5,9 +5,13 @@ import java.util.List;
 import me.chenhewen.learnble2.data.GattServiceItem;
 
 public class ServiceDiscoveredEvent {
-    public List<GattServiceItem> gattServiceItems;
 
-    public ServiceDiscoveredEvent(List<GattServiceItem> gattServiceItems) {
+    public ServiceDiscoveredEvent(String address, List<GattServiceItem> gattServiceItems) {
+        this.address = address;
         this.gattServiceItems = gattServiceItems;
     }
+
+    public String address;
+    public List<GattServiceItem> gattServiceItems;
+
 }

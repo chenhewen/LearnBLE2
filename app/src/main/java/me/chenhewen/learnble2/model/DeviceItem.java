@@ -19,6 +19,8 @@ public class DeviceItem implements Serializable {
     public DeviceItem(ScanItem scanItem) {
         this.name = scanItem.name;
         this.address = scanItem.address;
+        // TODO:
+        this.actionItems = DeviceItemTemplate.templateOnOFF.actionItems;
     }
 
     public static List<DeviceItem> mockItems = new ArrayList<>(Arrays.asList(
