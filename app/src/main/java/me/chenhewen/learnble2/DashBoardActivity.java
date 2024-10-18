@@ -67,9 +67,9 @@ public class DashBoardActivity extends AppCompatActivity {
 
         tabFragmentManager = new TabFragmentManager(tabLayout, fragmentAnchorView, getApplicationContext(), getSupportFragmentManager());
         tabFragmentManager.addTab("Scanner", new ScannerFragment(), "scanner", false);
-        for (DeviceItem deviceItem : DeviceItem.mockItems) {
-            tabFragmentManager.addTab(deviceItem.name, DeviceFragment.newInstance(deviceItem), deviceItem.address, true);
-        }
+//        for (DeviceItem deviceItem : DeviceItem.mockItems) {
+//            tabFragmentManager.addTab(deviceItem.name, DeviceFragment.newInstance(deviceItem), deviceItem.address, true);
+//        }
 
         inlineNotification = findViewById(R.id.inline_notification);
         View enableBluetoothButton = findViewById(R.id.inline_notification_enable_button);

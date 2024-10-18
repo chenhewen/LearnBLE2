@@ -18,10 +18,12 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.textfield.TextInputEditText;
@@ -30,6 +32,9 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.List;
+
+import me.chenhewen.learnble2.dealer.BluetoothDealer;
 import me.chenhewen.learnble2.event.TabRemovedEvent;
 import me.chenhewen.learnble2.model.ActionItem;
 import me.chenhewen.learnble2.model.DeviceItem;
@@ -44,6 +49,7 @@ public class DeviceFragment extends Fragment {
     private DeviceItem deviceItem;
 
     private String[] uuidMockItems = new String[] {"A-A-A-A", "B-B-B-B", "C-C-C-C", "D-D-D-D"};
+    private BluetoothDealer bluetoothDealer;
 
     public static DeviceFragment newInstance(DeviceItem deviceItem) {
         Bundle args = new Bundle();
@@ -57,6 +63,7 @@ public class DeviceFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EventBus.getDefault().register(this);
+        bluetoothDealer = BLEApplication.getBluetoothDealer();
         Bundle args = getArguments();
         if (args != null) {
             System.out.println("chw: DeviceFragment onCreate args != null");
@@ -89,7 +96,8 @@ public class DeviceFragment extends Fragment {
         fabButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                openSheet(null);
+                BottomSheet bottomSheet = new BottomSheet(getContext(), bluetoothService, bluetoothDealer, deviceItem);
+                bottomSheet.openSheet(null);
             }
         });
 
@@ -135,7 +143,8 @@ public class DeviceFragment extends Fragment {
                                     bluetoothService.send(deviceItem.address, actionItem.serviceUuid, actionItem.characteristicUuid, actionItem.getToSendingData());
                                 }
                             } else if (item.getItemId() == R.id.action_edit) {
-                                openSheet(actionItem);
+                                BottomSheet bottomSheet = new BottomSheet(getContext(), bluetoothService, bluetoothDealer, deviceItem);
+                                bottomSheet.openSheet(actionItem);
                             } else if (item.getItemId() == R.id.action_delete) {
                                 // TODO:
                             }
@@ -183,63 +192,6 @@ public class DeviceFragment extends Fragment {
         }
     }
 
-    private void openSheet(ActionItem actionItem) {
-        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(getContext());
-        View sheetContentView = LayoutInflater.from(getContext()).inflate(R.layout.device_add_sheet, null);
-        bottomSheetDialog.setContentView(sheetContentView);
-        bottomSheetDialog.show();
-
-        ActionItem mockActionItem = deviceItem.actionItems.get(1);
-        if (actionItem == null) {
-            actionItem = mockActionItem;
-        }
-
-        // service UUID
-        String[] uuidItems = uuidMockItems;
-        ArrayAdapter<String> serviceUuidAdapter = new ArrayAdapter<String>(getContext(),
-                android.R.layout.simple_dropdown_item_1line, uuidItems);
-        AutoCompleteTextView serviceUuidSelectionView = sheetContentView.findViewById(R.id.service_uuid_selection_view);
-        serviceUuidSelectionView.setAdapter(serviceUuidAdapter);
-        serviceUuidSelectionView.setText(actionItem.serviceUuid, false);
-
-        // characteristic UUID
-        ArrayAdapter<String> characteristicUuidAdapter = new ArrayAdapter<String>(getContext(),
-                android.R.layout.simple_dropdown_item_1line, uuidItems);
-        AutoCompleteTextView characteristicUuidSelectionView = sheetContentView.findViewById(R.id.characteristic_uuid_selection_view);
-        characteristicUuidSelectionView.setAdapter(characteristicUuidAdapter);
-        characteristicUuidSelectionView.setText(actionItem.characteristicUuid, false);
-
-        // Title
-        TextInputEditText titleView = sheetContentView.findViewById(R.id.title_view);
-        titleView.setText(actionItem.title);
-
-        // Data type
-        String[] dataTypeItems = ActionItem.SendDataType.getAllValues();
-        ArrayAdapter<String> dataTypeAdapter = new ArrayAdapter<String>(getContext(),
-                android.R.layout.simple_dropdown_item_1line, dataTypeItems);
-        AutoCompleteTextView dataTypeSelectionView = sheetContentView.findViewById(R.id.data_type_selection);
-        dataTypeSelectionView.setAdapter(dataTypeAdapter);
-        dataTypeSelectionView.setText(actionItem.sendDataType.getRawValue(), false);
-
-        // Send message
-        TextInputEditText msgView = sheetContentView.findViewById(R.id.msg_view);
-        if (actionItem.sendDataType == ActionItem.SendDataType.STRING) {
-            msgView.setText(actionItem.sendString);
-        } else if (actionItem.sendDataType == ActionItem.SendDataType.HEX) {
-            msgView.setText(ActionItem.convertByteArrayToHexString(actionItem.sendHex));
-        }
-
-        // Actions
-        View sendButton = sheetContentView.findViewById(R.id.send_button);
-        sendButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String title = titleView.getText().toString();
-                System.out.println("title: " + title);
-                bottomSheetDialog.dismiss();
-            }
-        });
-    }
 
     public void startBluetoothLeService() {
         Intent gattServiceIntent = new Intent(getContext(), BluetoothLeService.class);

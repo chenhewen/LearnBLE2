@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import me.chenhewen.learnble2.data.GattServiceItem;
 import me.chenhewen.learnble2.model.DeviceItem;
@@ -40,7 +42,6 @@ public class BluetoothDealer {
 
     // 数据
     public Map<String, List<GattServiceItem>> gettServiceItemsMap = new HashMap<>();
-//    public List<GattServiceItem> gattServiceItems = new ArrayList<>();
     public List<ScanItem> scanItems = new ArrayList();
     public List<DeviceItem> deviceItems = new ArrayList<>();
 
@@ -110,5 +111,30 @@ public class BluetoothDealer {
 
     public void removeDeviceItem(DeviceItem deviceItem) {
         deviceItems.removeIf( (item)-> item.address.equals(deviceItem.address));
+    }
+
+
+    public List<String> getAllServiceUuids(String address) {
+        List<GattServiceItem> serviceItems = gettServiceItemsMap.get(address);
+        if (serviceItems == null) {
+            return new ArrayList<>();
+        }
+        return serviceItems.stream().map(item->item.uuid.toString()).collect(Collectors.toList());
+    }
+
+    public List<String> getAllCharacteristicUuids(String address, String serviceUuid) {
+        List<GattServiceItem> serviceItems = gettServiceItemsMap.get(address);
+        if (serviceItems == null) {
+            return new ArrayList<>();
+        }
+
+        GattServiceItem serviceItem = serviceItems.stream()
+                .filter(item -> item.uuid.toString().equals(serviceUuid))
+                .findFirst().orElse(null);
+        if (serviceItem == null) {
+            return new ArrayList<>();
+        }
+
+        return serviceItem.characteristicItems.stream().map(item->item.uuid.toString()).collect(Collectors.toList());
     }
 }

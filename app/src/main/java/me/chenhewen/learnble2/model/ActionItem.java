@@ -57,6 +57,28 @@ public class ActionItem {
         return hexString.toString();
     }
 
+    public static byte[] convertHexStringToByteArray(String hex) {
+        // 去除字符串中的空格（如果有）
+        hex = hex.replaceAll("\\s+", "");
+
+        // 如果长度是奇数，自动在前面补 '0'
+        if (hex.length() % 2 != 0) {
+            hex = "0" + hex;
+        }
+
+        // 计算结果数组的长度
+        int len = hex.length();
+        byte[] data = new byte[len / 2];  // 每两个字符为一个字节
+
+        // 遍历字符串，每两个字符构成一个字节
+        for (int i = 0; i < len; i += 2) {
+            // 将两个字符（16进制表示的数）转换为一个字节
+            data[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
+                    + Character.digit(hex.charAt(i+1), 16));
+        }
+        return data;
+    }
+
     public static String convertByteArrayToHexString(byte[] array) {
         StringBuilder hexString = new StringBuilder();
         for (int i = 0; i < array.length; i++) {
@@ -85,7 +107,7 @@ public class ActionItem {
             return rawValue;
         }
 
-        public static String[] getAllValues() {
+        public static String[] getAllRawValues() {
             return new String[] {"String", "Hex"};
         }
     }

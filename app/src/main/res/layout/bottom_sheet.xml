@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
 
     <com.google.android.material.bottomsheet.BottomSheetDragHandleView
@@ -23,12 +24,36 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <com.google.android.material.button.MaterialButton
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_margin="10dp"
         android:layout_width="match_parent"
-        android:layout_height="60sp"
-        android:layout_margin="10sp"
-        android:id="@+id/send_button"
-        android:text="Send"
-        android:textSize="16sp"/>
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.button.MaterialButton
+            app:cornerRadius="10dp"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:id="@+id/save_button"
+            android:layout_marginEnd="12dp"
+            app:icon="@drawable/baseline_save_24"
+            app:iconGravity="textStart"
+            android:text="Save"
+            android:backgroundTint="@color/green"
+            android:textSize="16sp"/>
+
+        <com.google.android.material.button.MaterialButton
+            app:cornerRadius="10dp"
+            android:layout_weight="1"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:id="@+id/send_button"
+            app:icon="@drawable/baseline_send_24"
+            app:iconGravity="textStart"
+            android:text="Send"
+            android:textSize="16sp"/>
+    </LinearLayout>
+
 
 </LinearLayout>
