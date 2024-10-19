@@ -11,8 +11,6 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.tabs.TabLayout;
 
-import org.greenrobot.eventbus.EventBus;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -20,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 
 import me.chenhewen.learnble2.R;
-import me.chenhewen.learnble2.event.TabRemovedEvent;
 
 public class TabFragmentManager implements Serializable {
 
@@ -125,11 +122,11 @@ public class TabFragmentManager implements Serializable {
         TabFragmentItem removedTabFragmentItem = tabFragmentMap.remove(tab);
         tabLayout.removeTab(tab);
 
-        EventBus.getDefault().post(new TabRemovedEvent(removedTabFragmentItem.fragment.getTag()));
-
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.remove(removedTabFragmentItem.fragment);
-        transaction.commit();
+        if (removedTabFragmentItem != null) {
+            FragmentTransaction transaction = fragmentManager.beginTransaction();
+            transaction.remove(removedTabFragmentItem.fragment);
+            transaction.commit();
+        }
     }
 }
 

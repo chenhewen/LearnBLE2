@@ -100,6 +100,7 @@ public class BottomSheet {
 
         // Actions
         View sendButton = sheetContentView.findViewById(R.id.send_button);
+        View saveButton = sheetContentView.findViewById(R.id.save_button);
 
         // 交互
         serviceUuidSelectionView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -161,6 +162,31 @@ public class BottomSheet {
                             characteristicUuidWrapper.value,
                             sendMsg);
                 }
+            }
+        });
+
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String title = titleView.getText().toString();
+                String msg = msgView.getText().toString();
+
+                ActionItem tempActionItem = null;
+                if (sendDataTypeWrapper.value == ActionItem.SendDataType.STRING) {
+                    tempActionItem = new ActionItem(serviceUuidWrapper.value, characteristicUuidWrapper.value, title, sendDataTypeWrapper.value, msg, null);
+                } else if (sendDataTypeWrapper.value == ActionItem.SendDataType.HEX) {
+                    byte[] msgInHex = ActionItem.convertHexStringToByteArray(msg);
+                    tempActionItem = new ActionItem(serviceUuidWrapper.value, characteristicUuidWrapper.value, title, sendDataTypeWrapper.value, null, msgInHex);
+                }
+
+                if (actionItem != null) {
+                    bluetoothDealer.removeActionItem(deviceItem, actionItem);
+                    bluetoothDealer.addActionItem(deviceItem, tempActionItem);
+                } else {
+                    bluetoothDealer.addActionItem(deviceItem, tempActionItem);
+                }
+
+                bottomSheetDialog.dismiss();
             }
         });
     }

@@ -19,6 +19,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import me.chenhewen.learnble2.data.GattServiceItem;
+import me.chenhewen.learnble2.event.ActionItemChangedEvent;
+import me.chenhewen.learnble2.event.DeviceItemChangedEvent;
+import me.chenhewen.learnble2.model.ActionItem;
 import me.chenhewen.learnble2.model.DeviceItem;
 import me.chenhewen.learnble2.model.ScanItem;
 
@@ -106,11 +109,27 @@ public class BluetoothDealer {
         boolean noneExists = deviceItems.stream().noneMatch((item) -> item.address.equals(deviceItem.address));
         if (noneExists) {
             deviceItems.add(deviceItem);
+            // 广播数据变化
+            EventBus.getDefault().post(new DeviceItemChangedEvent(deviceItem.address));
         }
     }
 
     public void removeDeviceItem(DeviceItem deviceItem) {
         deviceItems.removeIf( (item)-> item.address.equals(deviceItem.address));
+        // 广播数据变化
+        EventBus.getDefault().post(new DeviceItemChangedEvent(deviceItem.address));
+    }
+
+    public void addActionItem(DeviceItem deviceItem, ActionItem actionItem) {
+        deviceItem.actionItems.add(actionItem);
+        // 广播数据变化
+        EventBus.getDefault().post(new ActionItemChangedEvent(deviceItem));
+    }
+
+    public void removeActionItem(DeviceItem deviceItem, ActionItem actionItem) {
+        deviceItem.actionItems.removeIf(aItem->aItem.id.equals(actionItem.id));
+        // 广播数据变化
+        EventBus.getDefault().post(new ActionItemChangedEvent(deviceItem));
     }
 
 

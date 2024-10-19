@@ -18,24 +18,15 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import com.google.android.material.bottomsheet.BottomSheetDialog;
-import com.google.android.material.textfield.TextInputEditText;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.util.List;
-
 import me.chenhewen.learnble2.dealer.BluetoothDealer;
-import me.chenhewen.learnble2.event.TabRemovedEvent;
+import me.chenhewen.learnble2.event.ActionItemChangedEvent;
 import me.chenhewen.learnble2.model.ActionItem;
 import me.chenhewen.learnble2.model.DeviceItem;
 
@@ -50,6 +41,7 @@ public class DeviceFragment extends Fragment {
 
     private String[] uuidMockItems = new String[] {"A-A-A-A", "B-B-B-B", "C-C-C-C", "D-D-D-D"};
     private BluetoothDealer bluetoothDealer;
+    private MyRecyclerAdapter recyclerAdapter;
 
     public static DeviceFragment newInstance(DeviceItem deviceItem) {
         Bundle args = new Bundle();
@@ -90,7 +82,8 @@ public class DeviceFragment extends Fragment {
         RecyclerView recyclerView = contentView.findViewById(R.id.recycler_view);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setAdapter(new DeviceFragment.MyRecyclerAdapter());
+        recyclerAdapter = new MyRecyclerAdapter();
+        recyclerView.setAdapter(recyclerAdapter);
 
         View fabButton = contentView.findViewById(R.id.fab);
         fabButton.setOnClickListener(new View.OnClickListener() {
@@ -192,7 +185,6 @@ public class DeviceFragment extends Fragment {
         }
     }
 
-
     public void startBluetoothLeService() {
         Intent gattServiceIntent = new Intent(getContext(), BluetoothLeService.class);
         MyBLEServiceConnection serviceConnection = new MyBLEServiceConnection();
@@ -213,16 +205,21 @@ public class DeviceFragment extends Fragment {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onMessageEvent(TabRemovedEvent event) {
-        if (bluetoothService != null) {
-            // 目前，可关闭的tab，我们使用device address作为tag
-            bluetoothService.disconnect(event.tag);
+    public void onMessageEvent(ActionItemChangedEvent event) {
+        if (deviceItem.id.equals(event.deviceItem.id)) {
+            recyclerAdapter.notifyDataSetChanged();
         }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (bluetoothService != null) {
+            // 目前，可关闭的tab，我们使用device address作为tag
+            bluetoothService.disconnect(deviceItem.address);
+            bluetoothService = null;
+        }
+
         EventBus.getDefault().unregister(this);
     }
 }

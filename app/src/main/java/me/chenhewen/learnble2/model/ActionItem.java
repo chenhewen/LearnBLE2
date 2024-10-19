@@ -3,6 +3,7 @@ package me.chenhewen.learnble2.model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 public class ActionItem {
 
@@ -15,12 +16,22 @@ public class ActionItem {
         this.sendHex = sendHex;
     }
 
+    public String id = UUID.randomUUID().toString();
     public String serviceUuid;
     public String characteristicUuid;
     public String title;
     public SendDataType sendDataType;
     public String sendString;
     public byte[] sendHex;
+
+    public void updateFrom(ActionItem actionItem) {
+        this.serviceUuid = actionItem.serviceUuid;
+        this.characteristicUuid = actionItem.characteristicUuid;
+        this.title = actionItem.title;
+        this.sendDataType = actionItem.sendDataType;
+        this.sendString = actionItem.sendString;
+        this.sendHex = actionItem.sendHex;
+    }
 
     public byte[] getToSendingData() {
         if (sendDataType == SendDataType.STRING) {

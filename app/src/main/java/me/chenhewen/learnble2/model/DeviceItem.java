@@ -4,8 +4,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 public class DeviceItem implements Serializable {
+
+    public String id = UUID.randomUUID().toString();
     public String name;
     public String address;
     public List<ActionItem> actionItems = new ArrayList<>();
