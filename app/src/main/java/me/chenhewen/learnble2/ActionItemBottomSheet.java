@@ -18,9 +18,9 @@ import me.chenhewen.learnble2.dealer.BluetoothDealer;
 import me.chenhewen.learnble2.model.ActionItem;
 import me.chenhewen.learnble2.model.DeviceItem;
 
-public class BottomSheet {
+public class ActionItemBottomSheet {
 
-    public BottomSheet(Context context, BluetoothLeService bluetoothService, BluetoothDealer bluetoothDealer, DeviceItem deviceItem) {
+    public ActionItemBottomSheet(Context context, BluetoothLeService bluetoothService, BluetoothDealer bluetoothDealer, DeviceItem deviceItem) {
         this.context = context;
         this.bluetoothService = bluetoothService;
         this.bluetoothDealer = bluetoothDealer;

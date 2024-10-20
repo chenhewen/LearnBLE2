@@ -89,12 +89,40 @@ public class DeviceFragment extends Fragment {
         fabButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                BottomSheet bottomSheet = new BottomSheet(getContext(), bluetoothService, bluetoothDealer, deviceItem);
-                bottomSheet.openSheet(null);
+                showFabPopupMenu(getContext(), fabButton);
             }
         });
 
         return contentView;
+    }
+
+    private void showFabPopupMenu(Context context, View fabButton) {
+        // 创建 PopupMenu
+        PopupMenu popup = new PopupMenu(context, fabButton);
+        // 通过 xml 文件添加菜单项
+        popup.getMenuInflater().inflate(R.menu.fab_pop_menu, popup.getMenu());
+
+        // 设置菜单点击事件
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                // 根据选项做相应操作
+                int itemId = item.getItemId();
+                if (itemId == R.id.add_action) {
+                    ActionItemBottomSheet actionItemBottomSheet = new ActionItemBottomSheet(getContext(), bluetoothService, bluetoothDealer, deviceItem);
+                    actionItemBottomSheet.openSheet(null);
+                } else if (itemId == R.id.save_device_template) {
+                    bluetoothDealer.saveTemplatesAsync(getContext());
+                } else if (itemId == R.id.import_device_template) {
+                    bluetoothDealer.fetchTemplatesAsync(getContext());
+                } else {
+                    return false;
+                }
+
+                return true;
+            }
+        });
+        popup.show();
     }
 
     private class MyRecyclerAdapter extends RecyclerView.Adapter<DeviceFragment.MyViewHolder> {
@@ -136,8 +164,8 @@ public class DeviceFragment extends Fragment {
                                     bluetoothService.send(deviceItem.address, actionItem.serviceUuid, actionItem.characteristicUuid, actionItem.getToSendingData());
                                 }
                             } else if (item.getItemId() == R.id.action_edit) {
-                                BottomSheet bottomSheet = new BottomSheet(getContext(), bluetoothService, bluetoothDealer, deviceItem);
-                                bottomSheet.openSheet(actionItem);
+                                ActionItemBottomSheet actionItemBottomSheet = new ActionItemBottomSheet(getContext(), bluetoothService, bluetoothDealer, deviceItem);
+                                actionItemBottomSheet.openSheet(actionItem);
                             } else if (item.getItemId() == R.id.action_delete) {
                                 // TODO:
                             }

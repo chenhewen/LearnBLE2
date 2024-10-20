@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/add_action"
+        android:icon="@drawable/baseline_add_24"
+        android:iconTint="?attr/colorPrimary"
+        android:title="Add Action"/>
+    <item
+        android:id="@+id/save_device_template"
+        android:icon="@drawable/baseline_save_alt_24"
+        android:iconTint="?attr/colorPrimary"
+        android:title="Save Template"/>
+    <item
+        android:id="@+id/import_device_template"
+        android:iconTint="?attr/colorPrimary"
+        android:title="Import Template"/>
+</menu>

@@ -1,4 +1,4 @@
-package me.chenhewen.learnble2;
+package me.chenhewen.learn;
 
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
@@ -21,6 +21,9 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import me.chenhewen.learnble2.DataHub;
+import me.chenhewen.learnble2.R;
 
 public class MainActivity extends AppCompatActivity {
 

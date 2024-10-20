@@ -1,4 +1,4 @@
-package me.chenhewen.learnble2;
+package me.chenhewen.learn;
 
 import android.os.Bundle;
 import android.view.View;
@@ -13,6 +13,8 @@ import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
+
+import me.chenhewen.learnble2.R;
 
 public class TabbedActivity extends AppCompatActivity {
 

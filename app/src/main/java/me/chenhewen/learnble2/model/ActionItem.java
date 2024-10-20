@@ -1,11 +1,12 @@
 package me.chenhewen.learnble2.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class ActionItem {
+public class ActionItem implements Serializable {
 
     public ActionItem(String serviceUuid, String characteristicUuid, String title, SendDataType sendDataType, String sendString, byte[] sendHex) {
         this.serviceUuid = serviceUuid;

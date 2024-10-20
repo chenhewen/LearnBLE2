@@ -35,7 +35,9 @@ import me.chenhewen.learn.TabFragmentManager;
 import me.chenhewen.learn.TabLayoutFragmentActivity;
 import me.chenhewen.learnble2.dealer.BluetoothDealer;
 import me.chenhewen.learnble2.event.BluetoothStateEvent;
+import me.chenhewen.learnble2.event.DeviceItemChangedEvent;
 import me.chenhewen.learnble2.model.DeviceItem;
+import me.chenhewen.learnble2.model.DeviceItemTemplate;
 
 public class DashBoardActivity extends AppCompatActivity {
 
@@ -66,10 +68,17 @@ public class DashBoardActivity extends AppCompatActivity {
         View fragmentAnchorView = findViewById(R.id.fragment_anchor);
 
         tabFragmentManager = new TabFragmentManager(tabLayout, fragmentAnchorView, getApplicationContext(), getSupportFragmentManager());
+        tabFragmentManager.setOnTebCloseListener(new TabFragmentManager.OnTabCloseListener() {
+            @Override
+            public void onTabClose(int position) {
+                DeviceItem deviceItem = bluetoothDealer.deviceItems.get(position);
+                bluetoothDealer.removeDeviceItem(deviceItem);
+            }
+        });
         tabFragmentManager.addTab("Scanner", new ScannerFragment(), "scanner", false);
-//        for (DeviceItem deviceItem : DeviceItem.mockItems) {
-//            tabFragmentManager.addTab(deviceItem.name, DeviceFragment.newInstance(deviceItem), deviceItem.address, true);
-//        }
+        for (DeviceItem deviceItem : bluetoothDealer.deviceItems) {
+            tabFragmentManager.addTab(deviceItem.name, DeviceFragment.newInstance(deviceItem), deviceItem.address, true);
+        }
 
         inlineNotification = findViewById(R.id.inline_notification);
         View enableBluetoothButton = findViewById(R.id.inline_notification_enable_button);
@@ -124,9 +133,18 @@ public class DashBoardActivity extends AppCompatActivity {
         }
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(DeviceItemChangedEvent event) {
+        DeviceItem deviceItem = event.deviceItem;
+        if (event.operation.equals(DeviceItemChangedEvent.Operation.ADD)) {
+            tabFragmentManager.addTab(deviceItem.name, DeviceFragment.newInstance(deviceItem), deviceItem.address, true);
+        }
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
+//        tabFragmentManager.onDestroy();
     }
 }

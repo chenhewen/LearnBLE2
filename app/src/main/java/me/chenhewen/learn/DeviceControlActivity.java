@@ -1,4 +1,4 @@
-package me.chenhewen.learnble2;
+package me.chenhewen.learn;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -34,6 +34,8 @@ import androidx.core.app.ActivityCompat;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.chenhewen.learnble2.BluetoothLeService;
+import me.chenhewen.learnble2.R;
 import me.chenhewen.learnble2.model.ScanItem;
 
 public class DeviceControlActivity extends AppCompatActivity {

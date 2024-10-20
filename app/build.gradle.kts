@@ -32,7 +32,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
@@ -40,6 +39,8 @@ dependencies {
     implementation(libs.eventbus)
     implementation(libs.swiperefreshlayout)
     implementation(libs.gson)
+    implementation(libs.rxjava)
+    implementation(libs.rxandroid)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

@@ -1,9 +1,18 @@
 package me.chenhewen.learnble2.event;
 
-public class DeviceItemChangedEvent {
-    public String deviceAddress;
+import me.chenhewen.learnble2.model.DeviceItem;
 
-    public DeviceItemChangedEvent(String deviceAddress) {
-        this.deviceAddress = deviceAddress;
+public class DeviceItemChangedEvent {
+    public DeviceItem deviceItem;
+    public Operation operation;
+
+    public DeviceItemChangedEvent(DeviceItem deviceItem, Operation operation) {
+        this.deviceItem = deviceItem;
+        this.operation = operation;
+    }
+
+    public enum Operation {
+        ADD,
+        REMOVE
     }
 }
