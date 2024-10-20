@@ -77,6 +77,7 @@ public class DeviceControlActivity extends AppCompatActivity {
         @Override
         public void onServiceDisconnected(ComponentName name) {
             bluetoothService = null;
+            System.out.println("ABCDEFG");
         }
     };
     private MySpinnerAdapter spinnerAdapter;

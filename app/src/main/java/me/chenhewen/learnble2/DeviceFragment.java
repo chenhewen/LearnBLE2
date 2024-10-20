@@ -89,7 +89,9 @@ public class DeviceFragment extends Fragment {
         fabButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showFabPopupMenu(getContext(), fabButton);
+//                showFabPopupMenu(getContext(), fabButton);
+                ActionItemBottomSheet actionItemBottomSheet = new ActionItemBottomSheet(getContext(), bluetoothService, bluetoothDealer, deviceItem);
+                actionItemBottomSheet.openSheet(null);
             }
         });
 
@@ -112,9 +114,9 @@ public class DeviceFragment extends Fragment {
                     ActionItemBottomSheet actionItemBottomSheet = new ActionItemBottomSheet(getContext(), bluetoothService, bluetoothDealer, deviceItem);
                     actionItemBottomSheet.openSheet(null);
                 } else if (itemId == R.id.save_device_template) {
-                    bluetoothDealer.saveTemplatesAsync(getContext());
+//                    bluetoothDealer.saveCurrentToTemplates("Recent", deviceItem);
                 } else if (itemId == R.id.import_device_template) {
-                    bluetoothDealer.fetchTemplatesAsync(getContext());
+//                    bluetoothDealer.templates;
                 } else {
                     return false;
                 }
@@ -167,7 +169,7 @@ public class DeviceFragment extends Fragment {
                                 ActionItemBottomSheet actionItemBottomSheet = new ActionItemBottomSheet(getContext(), bluetoothService, bluetoothDealer, deviceItem);
                                 actionItemBottomSheet.openSheet(actionItem);
                             } else if (item.getItemId() == R.id.action_delete) {
-                                // TODO:
+                                bluetoothDealer.removeActionItem(deviceItem, actionItem);
                             }
 
                             return false;

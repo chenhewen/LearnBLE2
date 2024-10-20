@@ -35,7 +35,9 @@ import me.chenhewen.learn.TabFragmentManager;
 import me.chenhewen.learnble2.data.GattServiceItem;
 import me.chenhewen.learnble2.dealer.BluetoothDealer;
 import me.chenhewen.learnble2.event.BluetoothStateEvent;
+import me.chenhewen.learnble2.model.ActionItem;
 import me.chenhewen.learnble2.model.DeviceItem;
+import me.chenhewen.learnble2.model.DeviceItemTemplate;
 import me.chenhewen.learnble2.model.ScanItem;
 
 public class ScannerFragment extends Fragment {
@@ -197,7 +199,9 @@ public class ScannerFragment extends Fragment {
                 boolean success = bluetoothService.connect(scanItem.address);
                 if (success) {
                     // 增加Tab
-                    bluetoothDealer.addDeviceItem(new DeviceItem(scanItem));
+                    DeviceItem saveDeviceItemForCurrentAddress = bluetoothDealer.savedDeviceItemMap.get(scanItem.address);
+                    List<ActionItem> actionItems = saveDeviceItemForCurrentAddress == null ? DeviceItemTemplate.templateOnOFF.actionItems : saveDeviceItemForCurrentAddress.actionItems;
+                    bluetoothDealer.addDeviceItem(new DeviceItem(scanItem.name, scanItem.address, actionItems));
                 }
             }
         }

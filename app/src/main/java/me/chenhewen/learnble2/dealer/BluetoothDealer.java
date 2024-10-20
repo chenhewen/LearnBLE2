@@ -16,10 +16,10 @@ import org.greenrobot.eventbus.EventBus;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -32,7 +32,6 @@ import me.chenhewen.learnble2.event.ActionItemChangedEvent;
 import me.chenhewen.learnble2.event.DeviceItemChangedEvent;
 import me.chenhewen.learnble2.model.ActionItem;
 import me.chenhewen.learnble2.model.DeviceItem;
-import me.chenhewen.learnble2.model.DeviceItemTemplate;
 import me.chenhewen.learnble2.model.ScanItem;
 
 public class BluetoothDealer {
@@ -40,7 +39,8 @@ public class BluetoothDealer {
     public BluetoothDealer(Context context, BluetoothManager bluetoothManager) {
         this.context = context;
         bluetoothAdapter = bluetoothManager.getAdapter();
-        templates.add(DeviceItemTemplate.templateOnOFF);
+
+        fetchDeviceItemsAsync();
     }
 
     // 常量
@@ -58,7 +58,7 @@ public class BluetoothDealer {
     public Map<String, List<GattServiceItem>> gettServiceItemsMap = new HashMap<>();
     public List<ScanItem> scanItems = new ArrayList();
     public List<DeviceItem> deviceItems = new ArrayList<>();
-    public List<DeviceItemTemplate> templates = new ArrayList<>();
+    public Map<String, DeviceItem> savedDeviceItemMap = new HashMap<>();
 
     public boolean isBluetoothEnable() {
         return bluetoothAdapter.isEnabled();
@@ -173,13 +173,16 @@ public class BluetoothDealer {
     // Templates
 
     @SuppressLint("CheckResult")
-    public void saveTemplatesAsync(Context context) {
+    public void saveDeviceItemsAsync(List<DeviceItem> deviceItems) {
         Observable.create(emitter -> {
             try {
+                for (DeviceItem deviceItem : deviceItems) {
+                    savedDeviceItemMap.put(deviceItem.address, deviceItem);
+                }
                 // 在这里执行发送数据的操作
                 Gson gson = new Gson();
-                String jsonString = gson.toJson(templates);
-                FileUtils.saveStringToFile(context, Const.TEMPLATE_FILE_NAME, jsonString);
+                String jsonString = gson.toJson(savedDeviceItemMap);
+                FileUtils.saveStringToFile(context, Const.DEVICE_ITEMS_FILE_NAME, jsonString);
 
                 emitter.onComplete(); // 操作完成
             } catch (Exception e) {
@@ -201,16 +204,16 @@ public class BluetoothDealer {
     }
 
     @SuppressLint("CheckResult")
-    public void fetchTemplatesAsync(Context context) {
-        Observable<List<DeviceItemTemplate>> objectObservable = Observable.create(emitter -> {
+    public void fetchDeviceItemsAsync() {
+        Observable<Map<String, DeviceItem>> objectObservable = Observable.create(emitter -> {
             try {
                 Gson gson = new Gson();
-                String jsonString = FileUtils.readStringFromFile(context, Const.TEMPLATE_FILE_NAME);
-                Type deviceListType = new TypeToken<List<DeviceItemTemplate>>() {
+                String jsonString = FileUtils.readStringFromFile(context, Const.DEVICE_ITEMS_FILE_NAME);
+                Type deviceItemMapType = new TypeToken<Map<String, DeviceItem>>() {
                 }.getType();
-                List<DeviceItemTemplate> list = gson.fromJson(jsonString, deviceListType);
+                Map<String, DeviceItem> map = gson.fromJson(jsonString, deviceItemMapType);
 
-                emitter.onNext(list);
+                emitter.onNext(map);
                 emitter.onComplete();
             } catch (Exception e) {
                 emitter.onError(e);
@@ -219,16 +222,52 @@ public class BluetoothDealer {
         objectObservable.subscribeOn(Schedulers.io());
         objectObservable.observeOn(AndroidSchedulers.mainThread());
         objectObservable.subscribe(
-            (List<DeviceItemTemplate> data) -> {
+            (Map<String, DeviceItem> data) -> {
                 // 这里处理返回的数据并更新UI
                 Gson gson = new Gson();
                 String jsonString = gson.toJson(data);
                 System.out.println("获取到数据: " + jsonString);
+                savedDeviceItemMap = data;
             },
             throwable -> {
                 // 处理错误
                 System.err.println("发生错误: " + throwable.getMessage());
             });
+    }
 
+//    public void saveCurrentToTemplates(String templateName, DeviceItem deviceItem) {
+//        int deviceNo = deviceNo(deviceItem.address);
+//        DeviceItemTemplate deviceItemTemplate = new DeviceItemTemplate(deviceNo, templateName, deviceItem.actionItems);
+//        templates.add(deviceItemTemplate);
+//        saveTemplatesAsync(context);
+//    }
+//
+//    public int deviceNo(String address) {
+//        List<GattServiceItem> serviceItems = gettServiceItemsMap.get(address);
+//        if (serviceItems != null) {
+//            String[] serviceUuids = serviceItems.stream().map(item -> item.uuid.toString()).toArray(String[]::new);;
+//            return computeSortedHash(serviceUuids);
+//        }
+//
+//        return -1;
+//    }
+
+    public static int computeSortedHash(String[] strings) {
+        // 计算每个字符串的哈希值
+        int[] hashCodes = new int[strings.length];
+        for (int i = 0; i < strings.length; i++) {
+            hashCodes[i] = strings[i].hashCode();
+        }
+
+        // 对哈希值进行排序
+        Arrays.sort(hashCodes);
+
+        // 将排序后的哈希值相加或组合
+        int combinedHash = 0;
+        for (int hashCode : hashCodes) {
+            combinedHash = combinedHash * 31 + hashCode;  // 可以自定义组合方式
+        }
+
+        return combinedHash;
     }
 }

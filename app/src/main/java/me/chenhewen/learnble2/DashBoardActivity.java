@@ -73,6 +73,7 @@ public class DashBoardActivity extends AppCompatActivity {
             public void onTabClose(int position) {
                 DeviceItem deviceItem = bluetoothDealer.deviceItems.get(position);
                 bluetoothDealer.removeDeviceItem(deviceItem);
+                bluetoothDealer.saveDeviceItemsAsync(Arrays.asList(deviceItem));
             }
         });
         tabFragmentManager.addTab("Scanner", new ScannerFragment(), "scanner", false);
@@ -142,9 +143,14 @@ public class DashBoardActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        bluetoothDealer.saveDeviceItemsAsync(bluetoothDealer.deviceItems);
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         EventBus.getDefault().unregister(this);
-//        tabFragmentManager.onDestroy();
     }
 }
