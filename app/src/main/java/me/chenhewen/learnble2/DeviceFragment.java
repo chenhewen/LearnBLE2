@@ -293,11 +293,11 @@ public class DeviceFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (bluetoothService != null) {
-            // 目前，可关闭的tab，我们使用device address作为tag
-            bluetoothService.disconnect(deviceItem.address);
-            bluetoothService = null;
-        }
+//        if (bluetoothService != null) {
+//            // 目前，可关闭的tab，我们使用device address作为tag
+//            bluetoothService.disconnect(deviceItem.address);
+//            bluetoothService = null;
+//        }
 
         EventBus.getDefault().unregister(this);
     }

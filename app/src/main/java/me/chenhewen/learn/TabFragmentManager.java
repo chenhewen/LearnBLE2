@@ -1,6 +1,9 @@
 package me.chenhewen.learn;
 
 import android.content.Context;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.StrikethroughSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
@@ -16,12 +19,14 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import me.chenhewen.learnble2.BLEApplication;
 import me.chenhewen.learnble2.Const;
 import me.chenhewen.learnble2.R;
 import me.chenhewen.learnble2.dealer.BluetoothDealer;
+import me.chenhewen.learnble2.model.DeviceItem;
 
 public class TabFragmentManager implements Serializable {
 
@@ -57,6 +62,10 @@ public class TabFragmentManager implements Serializable {
             @Override
             public void onTabReselected(TabLayout.Tab tab) { }
         });
+    }
+
+    public void selectFirstTab() {
+        tabFragmentMap.values().stream().findFirst().ifPresent(tabFragmentItem -> tabLayout.selectTab(tabFragmentItem.tab));
     }
 
     private void removeAllFragment() {
@@ -184,6 +193,29 @@ public class TabFragmentManager implements Serializable {
         }
         // 如果索引超出范围，返回 null 或抛出异常
         return null;
+    }
+
+    public void markTabDisableStyle(List<DeviceItem> deviceItems) {
+        for (DeviceItem deviceItem : deviceItems) {
+            String title = deviceItem.name;
+            SpannableString spannableString = new SpannableString(title);
+            // 设置 StrikethroughSpan 给整个文本 (从0到字符串的长度)
+            spannableString.setSpan(new StrikethroughSpan(), 0, title.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            String fragmentTag = deviceItem.address;
+            tabFragmentMap.values().stream().filter(item -> Objects.equals(item.fragment.getTag(), fragmentTag)).findFirst().ifPresent(tabFragmentItem -> {
+                View customView = tabFragmentItem.tab.getCustomView();
+                if (customView != null) {
+                    TextView textView = customView.findViewById(R.id.tab_text_view);
+                    textView.setText(spannableString);
+                }
+            });
+        }
+    }
+
+    public void clearAll() {
+        tabLayout.removeAllTabs();
+        removeAllFragment();
+        tabFragmentMap.clear();
     }
 }
 

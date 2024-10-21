@@ -56,22 +56,11 @@ public class ScannerFragment extends Fragment {
 
     // 数据
     private BluetoothDealer bluetoothDealer;
-    private List<ScanItem> mockItems = new ArrayList<>(Arrays.asList(
-            new ScanItem("AAAAA", "1.A.B.C.D.E.F", -10),
-            new ScanItem("BBBBB", "2.A.B.C.D.E.F", -20)
-    ));
-    private List<ScanItem> scanItems = mockItems;
-
-//    private static final String ARG_1 = "ARG_1";
-//
-//    public static ScannerFragment newInstance(TabFragmentManager tabFragmentManager) {
-//        ScannerFragment fragment = new ScannerFragment();
-//        Bundle args = new Bundle();
-//        args.putSerializable(ARG_1, tabFragmentManager);
-//        fragment.setArguments(args);
-//
-//        return fragment;
-//    }
+//    private List<ScanItem> mockItems = new ArrayList<>(Arrays.asList(
+//            new ScanItem("AAAAA", "1.A.B.C.D.E.F", -10),
+//            new ScanItem("BBBBB", "2.A.B.C.D.E.F", -20)
+//    ));
+    private List<ScanItem> scanItems = new ArrayList<>();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -166,11 +155,18 @@ public class ScannerFragment extends Fragment {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(BluetoothStateEvent event) {
         swipeRefreshLayout.setEnabled(event.bluetoothState == BluetoothAdapter.STATE_ON);
+
+        bluetoothDealer.scanItems.clear();
+        recyclerViewAdapter.notifyDataSetChanged();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+//        if (bluetoothService != null) {
+//            bluetoothService = null;
+//        }
+
         EventBus.getDefault().unregister(this);
     }
 

@@ -3,23 +3,30 @@ package me.chenhewen.learnble2;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+import android.window.OnBackInvokedCallback;
+import android.window.OnBackInvokedDispatcher;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 
 import org.greenrobot.eventbus.EventBus;
@@ -81,6 +88,7 @@ public class DashBoardActivity extends AppCompatActivity {
             tabFragmentManager.addTab(deviceItem.name, DeviceFragment.newInstance(deviceItem), deviceItem.address, true);
         }
         tabFragmentManager.addTab("Setting", new SettingsFragment(), "setting", false);
+        tabFragmentManager.selectFirstTab();
 
         inlineNotification = findViewById(R.id.inline_notification);
         View enableBluetoothButton = findViewById(R.id.inline_notification_enable_button);
@@ -91,6 +99,8 @@ public class DashBoardActivity extends AppCompatActivity {
                 bluetoothDealer.enableBluetooth();
             }
         });
+
+        registerBackPress();
     }
 
     private boolean requestPermission() {
@@ -129,6 +139,7 @@ public class DashBoardActivity extends AppCompatActivity {
                 break;
             case BluetoothAdapter.STATE_OFF:
                 inlineNotification.setVisibility(View.VISIBLE);
+                tabFragmentManager.markTabDisableStyle(bluetoothDealer.deviceItems);
                 break;
             default:
                 break;
@@ -147,6 +158,59 @@ public class DashBoardActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         bluetoothDealer.saveDeviceItemsAsync(bluetoothDealer.deviceItems);
+    }
+
+    private void showExitDialog() {
+        if (bluetoothDealer.deviceItems.isEmpty()) {
+            clearAndFinish();
+            return;
+        }
+
+        new MaterialAlertDialogBuilder(this)
+            .setTitle("Do you want to exit?")
+            .setMessage("Some connections are still open. Click YES to close all and exit")
+            .setPositiveButton("YES", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                    clearAndFinish();
+                }
+            })
+            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            })
+            .show();
+    }
+
+    private void registerBackPress() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 (API 33)
+            getOnBackPressedDispatcher().setOnBackInvokedDispatcher(new OnBackInvokedDispatcher() {
+                @Override
+                public void registerOnBackInvokedCallback(int priority, @NonNull OnBackInvokedCallback callback) {
+                    showExitDialog();
+                }
+
+                @Override
+                public void unregisterOnBackInvokedCallback(@NonNull OnBackInvokedCallback callback) {
+                    // 取消回调
+                }
+            });
+        } else {
+            // 低于 Android 13 使用 OnBackPressedDispatcher
+            getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+                @Override
+                public void handleOnBackPressed() {
+                    showExitDialog();
+                }
+            });
+        }
+    }
+
+    private void clearAndFinish() {
+        System.exit(0);
     }
 
     @Override

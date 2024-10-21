@@ -79,7 +79,9 @@ public class BluetoothDealer {
                 public void run() {
                     scanning = false;
                     System.out.println("chw: postDelayed stopScan");
-                    bluetoothLeScanner.stopScan(deviceScanCallback);
+                    if (bluetoothLeScanner != null && isBluetoothEnable()) {
+                        bluetoothLeScanner.stopScan(deviceScanCallback);
+                    }
                 }
             }, SCAN_PERIOD);
 
@@ -233,41 +235,5 @@ public class BluetoothDealer {
                 // 处理错误
                 System.err.println("发生错误: " + throwable.getMessage());
             });
-    }
-
-//    public void saveCurrentToTemplates(String templateName, DeviceItem deviceItem) {
-//        int deviceNo = deviceNo(deviceItem.address);
-//        DeviceItemTemplate deviceItemTemplate = new DeviceItemTemplate(deviceNo, templateName, deviceItem.actionItems);
-//        templates.add(deviceItemTemplate);
-//        saveTemplatesAsync(context);
-//    }
-//
-//    public int deviceNo(String address) {
-//        List<GattServiceItem> serviceItems = gettServiceItemsMap.get(address);
-//        if (serviceItems != null) {
-//            String[] serviceUuids = serviceItems.stream().map(item -> item.uuid.toString()).toArray(String[]::new);;
-//            return computeSortedHash(serviceUuids);
-//        }
-//
-//        return -1;
-//    }
-
-    public static int computeSortedHash(String[] strings) {
-        // 计算每个字符串的哈希值
-        int[] hashCodes = new int[strings.length];
-        for (int i = 0; i < strings.length; i++) {
-            hashCodes[i] = strings[i].hashCode();
-        }
-
-        // 对哈希值进行排序
-        Arrays.sort(hashCodes);
-
-        // 将排序后的哈希值相加或组合
-        int combinedHash = 0;
-        for (int hashCode : hashCodes) {
-            combinedHash = combinedHash * 31 + hashCode;  // 可以自定义组合方式
-        }
-
-        return combinedHash;
     }
 }
