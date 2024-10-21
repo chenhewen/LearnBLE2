@@ -8,4 +8,7 @@ public class Const {
 
     public static final String TEMPLATE_FILE_NAME = "templates";
     public static final String DEVICE_ITEMS_FILE_NAME = "deviceItems";
+
+    public static final String FRAGMENT_TAG_SCANNER = "scanner";
+    public static final String FRAGMENT_TAG_SETTING = "setting";
 }

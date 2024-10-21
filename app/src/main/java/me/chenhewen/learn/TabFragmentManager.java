@@ -13,12 +13,13 @@ import com.google.android.material.tabs.TabLayout;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import me.chenhewen.learnble2.BLEApplication;
+import me.chenhewen.learnble2.Const;
 import me.chenhewen.learnble2.R;
 import me.chenhewen.learnble2.dealer.BluetoothDealer;
 
@@ -73,12 +74,6 @@ public class TabFragmentManager implements Serializable {
         fragmentTransaction.commit();
     }
 
-    private void updateFragment(TabLayout.Tab tab) {
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(fragmentAnchor.getId(), tabFragmentMap.get(tab).fragment);
-        transaction.commit();
-    }
-
     private void updateCachedFragment(TabLayout.Tab tab) {
         TabFragmentItem tabFragmentItem = tabFragmentMap.get(tab);
         List<Fragment> allFragments = new ArrayList<>();
@@ -115,9 +110,9 @@ public class TabFragmentManager implements Serializable {
                 @Override
                 public void onClick(View v) {
                     if (tabCloseListener != null) {
-                        int tabIndex = getTabIndex(newTab);
+                        int position = newTab.getPosition();
                         // 去除scanner的位置
-                        tabCloseListener.onTabClose(tabIndex - 1);
+                        tabCloseListener.onTabClose(position - 1);
                     }
                     removeTab(newTab);
                 }
@@ -132,8 +127,17 @@ public class TabFragmentManager implements Serializable {
     public void addTab(String title, Fragment fragment, String fragmentTag, boolean isClosable) {
         TabLayout.Tab newTab = createNewTab(title, isClosable);
         TabFragmentItem item = new TabFragmentItem(newTab, fragment, isClosable, false);
+        List<String> tagList = tabFragmentMap.values().stream().map(tabFragItem -> tabFragItem.fragment.getTag()).collect(Collectors.toList());
+        if (fragmentTag.equals(Const.FRAGMENT_TAG_SCANNER)
+                || fragmentTag.equals(Const.FRAGMENT_TAG_SETTING)
+                || !tagList.contains(Const.FRAGMENT_TAG_SETTING)) {
+            tabLayout.addTab(newTab);
+        } else {
+            int size = tabFragmentMap.values().size();
+            // 放到setting前面的位置
+            tabLayout.addTab(newTab, size - 1);
+        }
         tabFragmentMap.put(newTab, item);
-        tabLayout.addTab(newTab);
 
         FragmentTransaction transaction = fragmentManager.beginTransaction();
         transaction.add(fragmentAnchor.getId(), fragment, fragmentTag);
@@ -170,18 +174,6 @@ public class TabFragmentManager implements Serializable {
         this.tabCloseListener = listener;
     }
 
-    private int getTabIndex(TabLayout.Tab targetTab) {
-        int index = 0;
-        for (TabLayout.Tab tab : tabFragmentMap.keySet()) {
-            if (tab.equals(targetTab)) {
-                return index;
-            }
-            index++;
-        }
-        // 如果找不到，返回 -1 表示未找到
-        return -1;
-    }
-
     private TabLayout.Tab getTabByIndex(int index) {
         int currentIndex = 0;
         for (TabLayout.Tab tab : tabFragmentMap.keySet()) {
@@ -193,14 +185,5 @@ public class TabFragmentManager implements Serializable {
         // 如果索引超出范围，返回 null 或抛出异常
         return null;
     }
-
-//    public void onDestroy() {
-//        FragmentTransaction transaction = fragmentManager.beginTransaction();
-//        for (TabFragmentItem tabFragmentItem : tabFragmentMap.values()) {
-//            transaction.remove(tabFragmentItem.fragment);
-//        }
-//        transaction.commit();
-//    }
-
 }
 

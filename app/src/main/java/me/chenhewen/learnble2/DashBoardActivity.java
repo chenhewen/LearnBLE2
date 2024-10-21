@@ -80,6 +80,7 @@ public class DashBoardActivity extends AppCompatActivity {
         for (DeviceItem deviceItem : bluetoothDealer.deviceItems) {
             tabFragmentManager.addTab(deviceItem.name, DeviceFragment.newInstance(deviceItem), deviceItem.address, true);
         }
+        tabFragmentManager.addTab("Setting", new SettingsFragment(), "setting", false);
 
         inlineNotification = findViewById(R.id.inline_notification);
         View enableBluetoothButton = findViewById(R.id.inline_notification_enable_button);
