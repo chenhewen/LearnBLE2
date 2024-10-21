@@ -21,11 +21,14 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.tencent.bugly.crashreport.CrashReport;
+
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import me.chenhewen.learnble2.dealer.BluetoothDealer;
+import me.chenhewen.learnble2.dealer.SettingDealer;
 import me.chenhewen.learnble2.event.ActionItemChangedEvent;
 import me.chenhewen.learnble2.model.ActionItem;
 import me.chenhewen.learnble2.model.DeviceItem;
@@ -36,11 +39,12 @@ public class DeviceFragment extends Fragment {
 
     // 服务
     private BluetoothLeService bluetoothService;
+    private BluetoothDealer bluetoothDealer;
+    private SettingDealer settingDealer;
 
     private DeviceItem deviceItem;
 
     private String[] uuidMockItems = new String[] {"A-A-A-A", "B-B-B-B", "C-C-C-C", "D-D-D-D"};
-    private BluetoothDealer bluetoothDealer;
     private MyRecyclerAdapter recyclerAdapter;
 
     public static DeviceFragment newInstance(DeviceItem deviceItem) {
@@ -56,6 +60,7 @@ public class DeviceFragment extends Fragment {
         super.onCreate(savedInstanceState);
         EventBus.getDefault().register(this);
         bluetoothDealer = BLEApplication.getBluetoothDealer();
+        settingDealer = BLEApplication.getSettingDealer();
         Bundle args = getArguments();
         if (args != null) {
             System.out.println("chw: DeviceFragment onCreate args != null");
@@ -89,7 +94,6 @@ public class DeviceFragment extends Fragment {
         fabButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                showFabPopupMenu(getContext(), fabButton);
                 ActionItemBottomSheet actionItemBottomSheet = new ActionItemBottomSheet(getContext(), bluetoothService, bluetoothDealer, deviceItem);
                 actionItemBottomSheet.openSheet(null);
             }
@@ -162,12 +166,9 @@ public class DeviceFragment extends Fragment {
                         @Override
                         public boolean onMenuItemClick(MenuItem item) {
                             if (item.getItemId() == R.id.action_send) {
-                                if (bluetoothService != null) {
-                                    bluetoothService.send(deviceItem.address, actionItem.serviceUuid, actionItem.characteristicUuid, actionItem.getToSendingData());
-                                }
+                                sendActionItem(actionItem);
                             } else if (item.getItemId() == R.id.action_edit) {
-                                ActionItemBottomSheet actionItemBottomSheet = new ActionItemBottomSheet(getContext(), bluetoothService, bluetoothDealer, deviceItem);
-                                actionItemBottomSheet.openSheet(actionItem);
+                                editActionItem(actionItem);
                             } else if (item.getItemId() == R.id.action_delete) {
                                 bluetoothDealer.removeActionItem(deviceItem, actionItem);
                             }
@@ -178,6 +179,41 @@ public class DeviceFragment extends Fragment {
 
                     // 显示 PopupMenu
                     popupMenu.show();
+                }
+            });
+
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    switch (settingDealer.getSettingClickChoice()) {
+                        case DO_NOTHING:
+                            break;
+                        case SEND_DATA:
+                            sendActionItem(actionItem);
+                            break;
+                        case EDIT_ITEM:
+                            editActionItem(actionItem);
+                            break;
+                    }
+                }
+            });
+
+            holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+
+                @Override
+                public boolean onLongClick(View v) {
+                    switch (settingDealer.getSettingLongClickChoice()) {
+                        case DO_NOTHING:
+                            break;
+                        case SEND_DATA:
+                            sendActionItem(actionItem);
+                            break;
+                        case EDIT_ITEM:
+                            editActionItem(actionItem);
+                            break;
+                    }
+
+                    return true;
                 }
             });
         }
@@ -197,6 +233,19 @@ public class DeviceFragment extends Fragment {
                 layoutParams.bottomMargin = 0;
                 holder.itemView.setLayoutParams(layoutParams);
             }
+        }
+    }
+
+    private void sendActionItem(ActionItem actionItem) {
+        if (bluetoothService != null) {
+            bluetoothService.send(deviceItem.address, actionItem.serviceUuid, actionItem.characteristicUuid, actionItem.getToSendingData());
+        }
+    }
+
+    private void editActionItem(ActionItem actionItem) {
+        if (bluetoothService != null) {
+            ActionItemBottomSheet actionItemBottomSheet = new ActionItemBottomSheet(getContext(), bluetoothService, bluetoothDealer, deviceItem);
+            actionItemBottomSheet.openSheet(actionItem);
         }
     }
 

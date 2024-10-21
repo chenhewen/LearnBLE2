@@ -1,5 +1,6 @@
 [versions]
 agp = "8.6.1"
+crashreport = "4.1.9.3"
 eventbus = "3.3.1"
 gson = "2.11.0"
 junit = "4.13.2"
@@ -15,6 +16,7 @@ rxandroid = "3.0.2"
 preference = "1.2.0"
 
 [libraries]
+crashreport = { module = "com.tencent.bugly:crashreport", version.ref = "crashreport" }
 eventbus = { module = "org.greenrobot:eventbus", version.ref = "eventbus" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

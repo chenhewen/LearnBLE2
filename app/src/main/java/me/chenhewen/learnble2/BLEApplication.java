@@ -6,11 +6,15 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.IntentFilter;
 
+import com.tencent.bugly.crashreport.CrashReport;
+
 import me.chenhewen.learnble2.dealer.BluetoothDealer;
+import me.chenhewen.learnble2.dealer.SettingDealer;
 
 public class BLEApplication extends Application {
 
     private static BluetoothDealer bluetoothDealer;
+    private static SettingDealer settingDealer;
 
     @Override
     public void onCreate() {
@@ -20,10 +24,17 @@ public class BLEApplication extends Application {
 
         BluetoothManager bluetoothManager = (BluetoothManager) getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothDealer = new BluetoothDealer(this, bluetoothManager);
+        settingDealer = new SettingDealer(this);
+
+        CrashReport.initCrashReport(getApplicationContext());
     }
 
     public static BluetoothDealer getBluetoothDealer() {
         return bluetoothDealer;
+    }
+
+    public static SettingDealer getSettingDealer() {
+        return settingDealer;
     }
 
     private void listenBluetoothStateChange() {
