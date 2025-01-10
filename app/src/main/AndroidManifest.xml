@@ -31,9 +31,6 @@
             android:value="false" />
 
         <activity
-            android:name=".SettingActivity"
-            android:exported="false" />
-        <activity
             android:name="me.chenhewen.learn.SwipeRecyclerViewActivity"
             android:exported="false"></activity>
         <activity
